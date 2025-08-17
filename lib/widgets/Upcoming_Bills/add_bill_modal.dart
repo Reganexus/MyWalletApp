@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:mywallet/models/account.dart';
-import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/models/bill.dart';
+import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/utils/color_utils.dart';
 import 'package:mywallet/widgets/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 
-class AddAccountForm extends StatefulWidget {
-  final Account? existingAccount;
+class AddBillForm extends StatefulWidget {
+  final Bill? existingBill;
 
-  const AddAccountForm({super.key, this.existingAccount});
+  const AddBillForm({super.key, this.existingBill});
 
   @override
-  State<AddAccountForm> createState() => _AddAccountFormState();
+  State<AddBillForm> createState() => _AddBillFormState();
 }
 
-Future<void> showAddAccountModal({
+Future<void> showAddBillModal({
   required BuildContext context,
-  Account? existingAccount,
+  Bill? existingBill,
 }) async {
   await showModalBottomSheet(
     context: context,
@@ -43,7 +43,7 @@ Future<void> showAddAccountModal({
                   right: 16,
                   top: 20,
                 ),
-                child: AddAccountForm(existingAccount: existingAccount),
+                child: AddBillForm(existingBill: existingBill),
               ),
             ),
           );
@@ -53,67 +53,91 @@ Future<void> showAddAccountModal({
   );
 }
 
-class _AddAccountFormState extends State<AddAccountForm> {
+class _AddBillFormState extends State<AddBillForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _balanceController = TextEditingController();
-  String _selectedCurrency = "PHP";
-  AccountCategory _selectedCategory = AccountCategory.other;
+  final _amountController = TextEditingController();
+
+  DateTime _dueDate = DateTime.now();
+  BillStatus _status = BillStatus.pending;
+  DateTime? _datePaid;
   Color _selectedColor = ColorUtils.availableColors.first;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.existingAccount != null) {
-      _nameController.text = widget.existingAccount!.name;
-      _balanceController.text = widget.existingAccount!.balance.toString();
-      _selectedCurrency = widget.existingAccount!.currency;
-      _selectedCategory = widget.existingAccount!.category;
-      _selectedColor = widget.existingAccount!.color;
+    if (widget.existingBill != null) {
+      _nameController.text = widget.existingBill!.name;
+      _amountController.text = widget.existingBill!.amount.toString();
+      _dueDate = widget.existingBill!.dueDate;
+      _status = widget.existingBill!.status;
+      _datePaid = widget.existingBill!.datePaid;
+      _selectedColor = widget.existingBill!.color;
     }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _balanceController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
-  Future<void> _addAccount() async {
+  Future<void> _pickDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  Future<void> _pickDatePaid() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _datePaid ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _datePaid = picked);
+  }
+
+  Future<void> _addBill() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     final name = _nameController.text.trim();
-    final balance = double.tryParse(_balanceController.text) ?? 0.0;
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
     final hex = ColorUtils.colorToHex(_selectedColor);
 
-    final newAccount = (widget.existingAccount ??
-            Account(
-              category: _selectedCategory,
+    final newBill = (widget.existingBill ??
+            Bill(
               name: name,
-              currency: _selectedCurrency,
-              balance: balance,
+              amount: amount,
+              dueDate: _dueDate,
+              status: _status,
+              datePaid: _datePaid,
+              colorHex: hex,
             ))
         .copyWith(
           name: name,
-          category: _selectedCategory,
-          currency: _selectedCurrency,
-          balance: balance,
+          amount: amount,
+          dueDate: _dueDate,
+          status: _status,
+          datePaid: _datePaid,
           colorHex: hex,
         );
 
-    final accountsProvider = context.read<AccountProvider>();
+    final billsProvider = context.read<BillProvider>();
 
-    if (widget.existingAccount != null) {
-      // **Show confirmation dialog before updating**
+    if (widget.existingBill != null) {
       final confirm = await showConfirmationDialog(
         context: context,
-        title: "Update Account",
-        content:
-            "Do you want to save changes to ${widget.existingAccount!.name}?",
+        title: "Update Bill",
+        content: "Do you want to save changes to ${widget.existingBill!.name}?",
         confirmText: "Update",
         confirmColor: Colors.blue,
       );
@@ -123,9 +147,9 @@ class _AddAccountFormState extends State<AddAccountForm> {
         return;
       }
 
-      await accountsProvider.updateAccount(newAccount);
+      await billsProvider.updateBill(newBill);
     } else {
-      await accountsProvider.addAccount(newAccount);
+      await billsProvider.addBill(newBill);
     }
 
     if (!mounted) return;
@@ -150,16 +174,16 @@ class _AddAccountFormState extends State<AddAccountForm> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              widget.existingAccount != null ? "Update Account" : "Add Account",
+              widget.existingBill != null ? "Update Bill" : "Add Bill",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
-            // 1. Name
+            // 1. Bill Name
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: "Account Name",
+                labelText: "Bill Name",
                 border: OutlineInputBorder(),
               ),
               validator:
@@ -170,78 +194,84 @@ class _AddAccountFormState extends State<AddAccountForm> {
             ),
             const SizedBox(height: 12),
 
-            // 2. Currency
-            DropdownButtonFormField<String>(
-              value: _selectedCurrency,
-              decoration: const InputDecoration(
-                labelText: "Currency",
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: "PHP",
-                  child: Text("PHP - Philippine Peso"),
-                ),
-                DropdownMenuItem(value: "USD", child: Text("USD - US Dollar")),
-                DropdownMenuItem(value: "EUR", child: Text("EUR - Euro")),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedCurrency = value);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // 3. Initial Value
+            // 2. Amount
             TextFormField(
-              controller: _balanceController,
+              controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
               decoration: const InputDecoration(
-                labelText: "Initial Value",
+                labelText: "Amount",
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a balance';
+                  return 'Please enter an amount';
                 }
                 if (double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return 'Enter a valid number';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 12),
 
-            // 4. Category
-            DropdownButtonFormField<AccountCategory>(
-              value: _selectedCategory,
+            // 3. Due Date
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Due Date: ${_dueDate.toLocal().toString().split(' ')[0]}",
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _pickDueDate,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // 4. Status
+            DropdownButtonFormField<BillStatus>(
+              value: _status,
               decoration: const InputDecoration(
-                labelText: "Category",
+                labelText: "Status",
                 border: OutlineInputBorder(),
               ),
               items:
-                  AccountCategory.values.map((category) {
+                  BillStatus.values.map((status) {
                     return DropdownMenuItem(
-                      value: category,
-                      child: Row(
-                        children: [
-                          Icon(categoryIcons[category], size: 20),
-                          const SizedBox(width: 8),
-                          Text(categoryLabels[category] ?? category.name),
-                        ],
-                      ),
+                      value: status,
+                      child: Text(status.name.toUpperCase()),
                     );
                   }).toList(),
               onChanged: (value) {
-                if (value != null) setState(() => _selectedCategory = value);
+                if (value != null) setState(() => _status = value);
               },
             ),
             const SizedBox(height: 12),
 
-            // 5. Color Selection
+            // 5. Date Paid (only if Paid)
+            if (_status == BillStatus.paid)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _datePaid == null
+                          ? "Date Paid: Not selected"
+                          : "Date Paid: ${_datePaid!.toLocal().toString().split(' ')[0]}",
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: _pickDatePaid,
+                  ),
+                ],
+              ),
+            if (_status == BillStatus.paid) const SizedBox(height: 12),
+
+            // 6. Color Selection
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -263,7 +293,7 @@ class _AddAccountFormState extends State<AddAccountForm> {
             const SizedBox(height: 16),
 
             ElevatedButton(
-              onPressed: _isLoading ? null : _addAccount,
+              onPressed: _isLoading ? null : _addBill,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
               ),
@@ -271,9 +301,9 @@ class _AddAccountFormState extends State<AddAccountForm> {
                   _isLoading
                       ? const CircularProgressIndicator.adaptive()
                       : Text(
-                        widget.existingAccount != null
-                            ? "Update Account"
-                            : "Add Account",
+                        widget.existingBill != null
+                            ? "Update Bill"
+                            : "Add Bill",
                       ),
             ),
             const SizedBox(height: 16),

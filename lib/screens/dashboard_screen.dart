@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/Account_Balance/account_balance_widget.dart';
-import '../widgets/upcoming_bills_widget.dart';
+import '../widgets/Upcoming_Bills/upcoming_bills_widget.dart';
 import '../widgets/graphs_section_widget.dart';
 import '../widgets/add_transaction_button.dart';
 import '../widgets/profile_sidebar.dart';
