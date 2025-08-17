@@ -1,74 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:mywallet/models/account.dart';
-import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/models/bill.dart';
+import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/utils/add_modal.dart';
-import 'package:mywallet/widgets/Account_Balance/add_account_modal.dart';
+import 'package:mywallet/widgets/Upcoming_Bills/add_bill_modal.dart';
 import 'package:mywallet/widgets/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 
-class ManageAccountsScreen extends StatefulWidget {
-  const ManageAccountsScreen({super.key});
+class ManageBillsScreen extends StatefulWidget {
+  const ManageBillsScreen({super.key});
 
   @override
-  State<ManageAccountsScreen> createState() => _ManageAccountsScreenState();
+  State<ManageBillsScreen> createState() => _ManageBillsScreenState();
 }
 
-class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
-  Future<void> _editAccount(Account account) async {
+class _ManageBillsScreenState extends State<ManageBillsScreen> {
+  Future<void> _editBill(Bill bill) async {
     await showDraggableModal(
       context: context,
-      child: AddAccountForm(existingAccount: account),
+      child: AddBillForm(existingBill: bill),
     );
   }
 
-  Future<void> _deleteAccount(Account account) async {
+  Future<void> _deleteBill(Bill bill) async {
     final confirm = await showConfirmationDialog(
       context: context,
-      title: "Delete Account",
-      content: "Are you sure you want to delete ${account.name}?",
+      title: "Delete Bill",
+      content: "Are you sure you want to delete ${bill.name}?",
     );
 
     if (!mounted || confirm != true) return;
 
-    context.read<AccountProvider>().deleteAccount(account.id!);
+    context.read<BillProvider>().deleteBill(bill.id!);
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AccountProvider>();
-    final accounts = provider.accounts;
+    final provider = context.watch<BillProvider>();
+    final bills = provider.bills;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Manage Accounts")),
+      appBar: AppBar(title: const Text("Manage Bills")),
       body:
-          accounts.isEmpty
-              ? const Center(child: Text("No accounts found"))
+          bills.isEmpty
+              ? const Center(child: Text("No bills found"))
               : ListView.builder(
                 padding: const EdgeInsets.all(8),
-                itemCount: accounts.length,
+                itemCount: bills.length,
                 itemBuilder: (context, index) {
-                  final account = accounts[index];
+                  final bill = bills[index];
                   return Card(
-                    color: account.color,
+                    color: bill.color,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     child: ListTile(
-                      leading: Icon(
-                        categoryIcons[account.category],
-                        color: Colors.black54,
-                        size: 32,
-                      ),
                       title: Text(
-                        account.name,
+                        bill.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                       subtitle: Text(
-                        "${account.currency} ${account.balance.toStringAsFixed(2)}",
+                        "₱${bill.amount.toStringAsFixed(2)} - Due: ${bill.dueDate.toLocal().toString().split(" ")[0]}",
                         style: const TextStyle(color: Colors.white70),
                       ),
                       trailing: Row(
@@ -76,11 +71,11 @@ class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.white),
-                            onPressed: () => _editAccount(account),
+                            onPressed: () => _editBill(bill),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteAccount(account),
+                            onPressed: () => _deleteBill(bill),
                           ),
                         ],
                       ),

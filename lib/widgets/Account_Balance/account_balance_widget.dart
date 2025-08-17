@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/utils/add_modal.dart';
 import 'package:mywallet/utils/formatters.dart';
 import 'package:mywallet/widgets/Account_Balance/add_account_modal.dart';
 import 'package:mywallet/widgets/Account_Balance/manage_account.dart';
@@ -15,7 +16,10 @@ class AccountBalanceWidget extends StatefulWidget {
 
 class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
   void _handleAddAccount() {
-    showAddAccountModal(context: context);
+    showDraggableModal(
+      context: context,
+      child: const AddAccountForm(existingAccount: null),
+    );
   }
 
   Future<void> _handleManageAccounts() async {

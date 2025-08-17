@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/utils/color_utils.dart';
 
 enum AccountCategory { bank, cash, crypto, investment, ewallet, other }
 
@@ -19,22 +20,6 @@ const Map<AccountCategory, String> categoryLabels = {
   AccountCategory.ewallet: "E-wallet",
   AccountCategory.other: "Other",
 };
-
-const List<Color> availableColors = [
-  Colors.blue,
-  Colors.indigo,
-  Colors.deepPurple,
-  Colors.purple,
-  Colors.red,
-  Colors.deepOrange,
-  Colors.teal,
-  Colors.green,
-  Colors.brown,
-  Colors.pink,
-  Colors.cyan,
-  Colors.blueGrey,
-  Colors.grey,
-];
 
 class Account {
   final int? id;
@@ -78,7 +63,7 @@ class Account {
     );
   }
 
-  Color get color => _colorFromHex(colorHex);
+  Color get color => ColorUtils.fromHex(colorHex);
 
   IconData get icon => categoryIcons[category]!;
 
@@ -98,21 +83,5 @@ class Account {
       balance: balance ?? this.balance,
       colorHex: colorHex ?? this.colorHex,
     );
-  }
-
-  static Color _colorFromHex(String hex) {
-    return Color(int.parse(hex.replaceFirst('#', '0xff')));
-  }
-
-  static String colorToHex(Color color, {bool includeAlpha = false}) {
-    final argb = color.toARGB32();
-    final a = (argb >> 24) & 0xFF;
-    final r = (argb >> 16) & 0xFF;
-    final g = (argb >> 8) & 0xFF;
-    final b = argb & 0xFF;
-
-    return includeAlpha
-        ? '#${a.toRadixString(16).padLeft(2, '0')}${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'
-        : '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
   }
 }
