@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/utils/add_transaction.dart';
 import '../widgets/Account_Balance/account_balance_widget.dart';
 import '../widgets/Upcoming_Bills/upcoming_bills_widget.dart';
-import '../widgets/graphs_section_widget.dart';
-import '../widgets/add_transaction_button.dart';
-import '../widgets/profile_sidebar.dart';
+import '../widgets/Graph_Section/graphs_section_widget.dart';
+import '../widgets/Sidebar/profile_sidebar.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -51,7 +51,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-      floatingActionButton: const AddTransactionButton(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showAddTransactionModal(context);
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

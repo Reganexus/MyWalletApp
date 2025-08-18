@@ -1,3 +1,4 @@
+import 'package:mywallet/models/transaction.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:mywallet/models/account.dart';
@@ -44,6 +45,19 @@ class DBService {
         dueDate TEXT NOT NULL,
         datePaid TEXT,
         colorHex TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        category TEXT,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT,
+        FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
       )
     ''');
   }
@@ -107,5 +121,27 @@ class DBService {
     final db = await database;
     final maps = await db.query('bills');
     return List.generate(maps.length, (i) => Bill.fromMap(maps[i]));
+  }
+
+  // ------------------ Transaction ------------------
+
+  // Insert a transaction
+  Future<int> insertTransaction(TransactionModel tx) async {
+    final db = await database;
+    return await db.insert('transactions', tx.toMap());
+  }
+
+  // Get all transactions (order by latest)
+  Future<List<TransactionModel>> getTransactions() async {
+    final db = await database;
+    final maps = await db.query('transactions', orderBy: 'date DESC');
+
+    return maps.map((map) => TransactionModel.fromMap(map)).toList();
+  }
+
+  // Delete transaction by id
+  Future<int> deleteTransaction(int id) async {
+    final db = await database;
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 }
