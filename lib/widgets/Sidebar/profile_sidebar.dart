@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/widgets/Sidebar/change_pin.dart';
 import 'package:mywallet/widgets/Sidebar/transaction_history_page.dart';
 
 class ProfileSidebar extends StatelessWidget {
@@ -17,7 +18,16 @@ class ProfileSidebar extends StatelessWidget {
               style: TextStyle(color: Colors.white, fontSize: 20),
             ),
           ),
-          const ListTile(leading: Icon(Icons.lock), title: Text("Change PIN")),
+          ListTile(
+            leading: const Icon(Icons.lock),
+            title: const Text("Change PIN"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePinPage()),
+              );
+            },
+          ),
           const ListTile(
             leading: Icon(Icons.cloud_upload),
             title: Text("Backup to Google Drive"),

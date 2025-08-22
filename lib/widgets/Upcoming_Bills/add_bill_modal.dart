@@ -234,7 +234,7 @@ class _AddBillFormState extends State<AddBillForm> {
 
             // 4. Status
             DropdownButtonFormField<BillStatus>(
-              value: _status,
+              initialValue: _status,
               decoration: const InputDecoration(
                 labelText: "Status",
                 border: OutlineInputBorder(),
