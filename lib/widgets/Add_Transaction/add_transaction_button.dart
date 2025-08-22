@@ -51,7 +51,7 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
         children: [
           // Dropdown for accounts
           DropdownButtonFormField<int>(
-            value: _selectedAccountId,
+            initialValue: _selectedAccountId,
             items:
                 accounts
                     .map(
@@ -72,7 +72,7 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
 
           // Transaction Type
           DropdownButtonFormField<String>(
-            value: _type,
+            initialValue: _type,
             items: const [
               DropdownMenuItem(value: "income", child: Text("Income")),
               DropdownMenuItem(value: "expense", child: Text("Expense")),
@@ -96,7 +96,7 @@ class _AddTransactionFormState extends State<AddTransactionForm> {
 
           // Category
           DropdownButtonFormField<String>(
-            value: _category.isNotEmpty ? _category : null,
+            initialValue: _category.isNotEmpty ? _category : null,
             items:
                 (_type == "income" ? incomeCategories : expenseCategories)
                     .map(

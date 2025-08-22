@@ -172,7 +172,7 @@ class _AddAccountFormState extends State<AddAccountForm> {
 
             // 2. Currency
             DropdownButtonFormField<String>(
-              value: _selectedCurrency,
+              initialValue: _selectedCurrency,
               decoration: const InputDecoration(
                 labelText: "Currency",
                 border: OutlineInputBorder(),
@@ -217,7 +217,7 @@ class _AddAccountFormState extends State<AddAccountForm> {
 
             // 4. Category
             DropdownButtonFormField<AccountCategory>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: const InputDecoration(
                 labelText: "Category",
                 border: OutlineInputBorder(),

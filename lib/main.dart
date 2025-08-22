@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Wallet App',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const PinScreen(),
+      home: const PinScreen(mode: PinMode.unlock),
     );
   }
 }
