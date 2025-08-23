@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/providers/theme_provider.dart';
 import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
 import 'package:mywallet/widgets/Sidebar/change_pin.dart';
 import 'package:mywallet/widgets/Sidebar/delete_data.dart';
 import 'package:mywallet/widgets/Sidebar/transaction_history_page.dart';
+import 'package:provider/provider.dart';
 
 class ProfileSidebar extends StatelessWidget {
   const ProfileSidebar({super.key});
@@ -40,10 +42,21 @@ class ProfileSidebar extends StatelessWidget {
               );
             },
           ),
-          const ListTile(
-            leading: Icon(Icons.dark_mode),
-            title: Text("Dark Mode"),
+          ListTile(
+            leading: const Icon(Icons.dark_mode),
+            title: const Text("Dark Mode"),
+            trailing: Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) {
+                return Switch(
+                  value: themeProvider.isDarkMode,
+                  onChanged: (value) {
+                    themeProvider.toggleTheme(value);
+                  },
+                );
+              },
+            ),
           ),
+
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text("Transaction History"),
