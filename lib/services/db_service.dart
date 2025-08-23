@@ -17,6 +17,20 @@ class DBService {
     return _database!;
   }
 
+  Future<void> resetDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
+
+  Future<void> clearAllData() async {
+    final db = await database;
+    await db.delete('accounts');
+    await db.delete('bills');
+    await db.delete('transactions');
+  }
+
   Future<Database> _initDB(String fileName) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);

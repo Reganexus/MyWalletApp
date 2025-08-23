@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/providers/bill_provider.dart';
+import 'package:mywallet/providers/transaction_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_screen.dart';
 
@@ -24,6 +28,26 @@ class _PinScreenState extends State<PinScreen> {
   void initState() {
     super.initState();
     _loadPin();
+
+    // Load providers after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
+      // Access providers safely after build
+      final accountProvider = Provider.of<AccountProvider>(
+        context,
+        listen: false,
+      );
+      final billProvider = Provider.of<BillProvider>(context, listen: false);
+      final txProvider = Provider.of<TransactionProvider>(
+        context,
+        listen: false,
+      );
+
+      await accountProvider.loadAccounts();
+      await billProvider.loadBills();
+      await txProvider.loadTransactions();
+    });
   }
 
   Future<void> _loadPin() async {
