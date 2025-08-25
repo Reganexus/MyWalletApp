@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/utils/add_transaction.dart';
+import 'package:mywallet/widgets/Total_Balance/total_balance.dart';
 import '../widgets/Account_Balance/account_balance_widget.dart';
 import '../widgets/Upcoming_Bills/upcoming_bills_widget.dart';
-import '../widgets/Graph_Section/graphs_section_widget.dart';
+import '../widgets/Graph_Section/graph_wrapper.dart';
 import '../widgets/Sidebar/profile_sidebar.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           "Wallet Dashboard",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
+        scrolledUnderElevation: 0,
         leading: GestureDetector(
           onTap: () {
             _scaffoldKey.currentState?.openDrawer();
@@ -43,6 +45,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: const [
+            TotalBalanceWidget(),
+            SizedBox(height: 16),
             AccountBalanceWidget(),
             SizedBox(height: 16),
             UpcomingBillsWidget(),

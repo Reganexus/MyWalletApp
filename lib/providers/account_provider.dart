@@ -53,4 +53,8 @@ class AccountProvider extends ChangeNotifier {
     await db.deleteAccount(id);
     await loadAccounts();
   }
+
+  List<String> get availableCurrencies {
+    return accounts.map((acc) => acc.currency).toSet().toList();
+  }
 }

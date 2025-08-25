@@ -36,4 +36,14 @@ class BillProvider extends ChangeNotifier {
     await db.deleteBill(id);
     await loadBills();
   }
+
+  Future<void> markBillPaid(String billId) async {
+    final bill = _bills.firstWhere((b) => b.id == billId);
+    final updatedBill = bill.copyWith(
+      status: BillStatus.paid,
+      datePaid: DateTime.now(),
+    );
+    await db.updateBill(updatedBill);
+    await loadBills();
+  }
 }
