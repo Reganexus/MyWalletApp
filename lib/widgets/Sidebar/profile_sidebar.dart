@@ -23,26 +23,6 @@ class ProfileSidebar extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.lock),
-            title: const Text("Change PIN"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChangePinPage()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.backup),
-            title: const Text("Backup & Restore"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BackupScreen()),
-              );
-            },
-          ),
-          ListTile(
             leading: const Icon(Icons.dark_mode),
             title: const Text("Dark Mode"),
             trailing: Consumer<ThemeProvider>(
@@ -70,11 +50,28 @@ class ProfileSidebar extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            title: const Text(
-              "Delete All Data",
-              style: TextStyle(color: Colors.red),
-            ),
+            leading: const Icon(Icons.lock),
+            title: const Text("Change PIN"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePinPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.backup),
+            title: const Text("Backup & Restore"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BackupScreen()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever),
+            title: const Text("Delete All Data"),
             onTap: () {
               Navigator.push(
                 context,

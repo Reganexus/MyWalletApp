@@ -15,6 +15,8 @@ class AccountBalanceWidget extends StatefulWidget {
 }
 
 class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
+  String? _selectedCurrency;
+
   void _handleAddAccount() {
     showDraggableModal(
       context: context,
@@ -41,28 +43,93 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
       builder: (context, provider, _) {
         final accounts = provider.accounts;
 
-        return Container(
-          color: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (accounts.isEmpty) ...[
-                const SizedBox(height: 50),
-                const Text(
-                  "No accounts yet",
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                  textAlign: TextAlign.center,
+        if (accounts.isEmpty) {
+          return Card(
+            margin: const EdgeInsets.all(8),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 50),
+                  const Text(
+                    "No accounts yet",
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton.icon(
+                    onPressed: _handleAddAccount,
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Account"),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Get unique currencies
+        final currencies =
+            accounts.map((a) => a.currency).toSet().toList()..sort();
+
+        // If no currency selected yet, default to "All"
+        _selectedCurrency ??= currencies.length > 1 ? "All" : currencies.first;
+
+        // Filter accounts by selected currency
+        final filteredAccounts =
+            (_selectedCurrency == "All")
+                ? accounts
+                : accounts
+                    .where((a) => a.currency == _selectedCurrency)
+                    .toList();
+
+        return Card(
+          margin: const EdgeInsets.all(8),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        "Accounts",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (currencies.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: DropdownButton<String>(
+                          value: _selectedCurrency,
+                          items:
+                              ["All", ...currencies]
+                                  .map(
+                                    (c) => DropdownMenuItem(
+                                      value: c,
+                                      child: Text(c),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _selectedCurrency = val);
+                            }
+                          },
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                TextButton.icon(
-                  onPressed: _handleAddAccount,
-                  icon: const Icon(Icons.add),
-                  label: const Text("Add Account"),
-                ),
-              ] else ...[
-                // Show accounts
-                ...accounts.map(
+
+                // Show filtered accounts
+                ...filteredAccounts.map(
                   (account) => _AccountCard(
                     account: account,
                     phpRate: provider.getPhpRate(account.currency),
@@ -86,7 +153,7 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
                   ],
                 ),
               ],
-            ],
+            ),
           ),
         );
       },
@@ -101,10 +168,7 @@ class _AccountCard extends StatelessWidget {
   const _AccountCard({required this.account, required this.phpRate});
 
   Widget _buildPhpBalance() {
-    if (account.currency == "PHP") {
-      return const SizedBox.shrink();
-    }
-
+    if (account.currency == "PHP") return const SizedBox.shrink();
     if (phpRate == null) {
       return const Text(
         "Fetching FX...",

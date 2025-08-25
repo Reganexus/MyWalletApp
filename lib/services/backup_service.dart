@@ -32,7 +32,6 @@ class BackupService {
     return backupFile;
   }
 
-  /// Restore DB by letting user pick a .db file
   Future<void> restoreDatabase() async {
     // Let user pick a file
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -47,10 +46,8 @@ class BackupService {
     final pickedFile = File(result.files.single.path!);
 
     if (await pickedFile.exists()) {
-      // Close DB before restoring
+      // Close and reset current DB
       final dbService = DBService();
-      final db = await dbService.database;
-      await db.close();
       await dbService.resetDatabase();
 
       // Destination path (app's working DB)
@@ -59,6 +56,9 @@ class BackupService {
 
       // Overwrite DB with the selected file
       await pickedFile.copy(path);
+
+      // ✅ Don’t re-create tables, just reopen normally
+      await dbService.database;
     } else {
       throw Exception("Selected file not found!");
     }

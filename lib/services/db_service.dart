@@ -35,45 +35,163 @@ class DBService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+      onOpen: (db) async {
+        await db.execute("PRAGMA foreign_keys = ON");
+      },
+    );
   }
 
   Future<void> _createDB(Database db, int version) async {
+    // ---------------- Schema ----------------
     await db.execute('''
-      CREATE TABLE accounts(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        category TEXT NOT NULL,
-        name TEXT NOT NULL,
-        currency TEXT NOT NULL,
-        balance REAL NOT NULL,
-        colorHex TEXT NOT NULL
-      )
-    ''');
+    CREATE TABLE accounts(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category TEXT NOT NULL,
+      name TEXT NOT NULL,
+      currency TEXT NOT NULL,
+      balance REAL NOT NULL,
+      colorHex TEXT NOT NULL
+    )
+  ''');
 
     await db.execute('''
-      CREATE TABLE bills(
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        amount REAL NOT NULL,
-        status TEXT NOT NULL,
-        dueDate TEXT NOT NULL,
-        datePaid TEXT,
-        colorHex TEXT NOT NULL
-      )
-    ''');
+    CREATE TABLE bills(
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      amount REAL NOT NULL,
+      status TEXT NOT NULL,
+      dueDate TEXT NOT NULL,
+      datePaid TEXT,
+      colorHex TEXT NOT NULL
+    )
+  ''');
 
     await db.execute('''
-      CREATE TABLE transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        account_id INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        category TEXT,
-        amount REAL NOT NULL,
-        date TEXT NOT NULL,
-        note TEXT,
-        FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
-      )
-    ''');
+    CREATE TABLE transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      category TEXT,
+      amount REAL NOT NULL,
+      date TEXT NOT NULL,
+      note TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+    )
+  ''');
+
+    // ---------------- Seed Data ----------------
+
+    // Accounts
+    await db.insert('accounts', {
+      'category': 'Bank',
+      'name': 'BDO Checking',
+      'currency': 'PHP',
+      'balance': 12000.0,
+      'colorHex': '#2196F3',
+    });
+    await db.insert('accounts', {
+      'category': 'Cash',
+      'name': 'Wallet',
+      'currency': 'PHP',
+      'balance': 2500.0,
+      'colorHex': '#4CAF50',
+    });
+    await db.insert('accounts', {
+      'category': 'E-Wallet',
+      'name': 'GCash',
+      'currency': 'PHP',
+      'balance': 5000.0,
+      'colorHex': '#9C27B0',
+    });
+
+    // Bills
+    final now = DateTime.now();
+    final bills = [
+      {
+        'id': 'bill-001',
+        'name': 'Electricity',
+        'amount': 2200.0,
+        'status': 'pending',
+        'dueDate': now.add(const Duration(days: 5)).toIso8601String(),
+        'datePaid': null,
+        'colorHex': '#FF9800',
+      },
+      {
+        'id': 'bill-002',
+        'name': 'Water',
+        'amount': 800.0,
+        'status': 'pending',
+        'dueDate': now.add(const Duration(days: 10)).toIso8601String(),
+        'datePaid': null,
+        'colorHex': '#03A9F4',
+      },
+      {
+        'id': 'bill-003',
+        'name': 'Internet',
+        'amount': 1500.0,
+        'status': 'paid',
+        'dueDate': now.subtract(const Duration(days: 2)).toIso8601String(),
+        'datePaid': now.subtract(const Duration(days: 1)).toIso8601String(),
+        'colorHex': '#673AB7',
+      },
+    ];
+    for (var bill in bills) {
+      await db.insert('bills', bill);
+    }
+
+    // ---------------- Transactions ----------------
+    final categories = [
+      'Food',
+      'Transport',
+      'Shopping',
+      'Bills',
+      'Entertainment',
+      'Groceries',
+      'Salary',
+      'Cashback',
+      'Investment',
+      'Health',
+    ];
+
+    final notes = [
+      'Jollibee meal',
+      'Grab ride',
+      'Shopee purchase',
+      'Meralco bill',
+      'Netflix subscription',
+      'SM Hypermarket',
+      'Salary credit',
+      'GCash promo',
+      'Stocks top-up',
+      'Pharmacy',
+    ];
+
+    // Generate 50+ transactions (mix of income/expense across accounts)
+    for (int i = 0; i < 55; i++) {
+      final accountId = (i % 3) + 1; // cycle through 1, 2, 3
+      final type = (i % 7 == 0) ? 'income' : 'expense'; // ~1 in 7 is income
+      final category = categories[i % categories.length];
+      final note = notes[i % notes.length];
+      final amount =
+          (type == 'income')
+              ? 5000 +
+                  (i * 100) // salary/income bigger
+              : 100 + (i * 20); // expenses smaller
+      final date = now.subtract(Duration(days: i)).toIso8601String();
+
+      await db.insert('transactions', {
+        'account_id': accountId,
+        'type': type,
+        'category': category,
+        'amount': amount.toDouble(),
+        'date': date,
+        'note': note,
+      });
+    }
   }
 
   // ------------------ Accounts ------------------
@@ -157,5 +275,23 @@ class DBService {
   Future<int> deleteTransaction(int id) async {
     final db = await database;
     return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Update a transaction (by id)
+  Future<int> updateTransaction(TransactionModel tx) async {
+    final db = await database;
+    if (tx.id == null) {
+      throw Exception("Cannot update a transaction without an ID");
+    }
+
+    final map = tx.toMap();
+    map.remove('id');
+
+    return await db.update(
+      'transactions',
+      map,
+      where: 'id = ?',
+      whereArgs: [tx.id],
+    );
   }
 }

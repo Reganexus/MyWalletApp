@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mywallet/providers/transaction_provider.dart';
-import 'package:mywallet/screens/dashboard_screen.dart';
-import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
-import 'package:mywallet/widgets/Sidebar/delete_data.dart';
-import 'package:provider/provider.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/theme_provider.dart';
+import 'package:mywallet/providers/transaction_provider.dart';
+import 'package:mywallet/screens/dashboard_screen.dart';
 import 'package:mywallet/screens/pin_screen.dart';
+import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
+import 'package:mywallet/widgets/Sidebar/delete_data.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/db_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
   final dbService = DBService();
   await dbService.database;
 

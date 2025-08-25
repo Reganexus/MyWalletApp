@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/providers/provider_reloader.dart';
 import 'package:mywallet/utils/add_modal.dart';
 import 'package:mywallet/widgets/Account_Balance/add_account_modal.dart';
 import 'package:mywallet/widgets/confirmation_dialog.dart';
@@ -19,6 +20,9 @@ class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
       context: context,
       child: AddAccountForm(existingAccount: account),
     );
+
+    if (!mounted) return;
+    await ProviderReloader.reloadAll(context);
   }
 
   Future<void> _deleteAccount(Account account) async {
@@ -31,6 +35,9 @@ class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
     if (!mounted || confirm != true) return;
 
     context.read<AccountProvider>().deleteAccount(account.id!);
+
+    if (!mounted) return;
+    await ProviderReloader.reloadAll(context);
   }
 
   @override

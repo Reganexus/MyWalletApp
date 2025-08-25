@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/providers/provider_reloader.dart';
 import 'package:mywallet/utils/color_utils.dart';
 import 'package:mywallet/widgets/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
@@ -107,30 +108,33 @@ class _AddAccountFormState extends State<AddAccountForm> {
 
     final accountsProvider = context.read<AccountProvider>();
 
-    if (widget.existingAccount != null) {
-      // **Show confirmation dialog before updating**
-      final confirm = await showConfirmationDialog(
-        context: context,
-        title: "Update Account",
-        content:
-            "Do you want to save changes to ${widget.existingAccount!.name}?",
-        confirmText: "Update",
-        confirmColor: Colors.blue,
-      );
+    try {
+      if (widget.existingAccount != null) {
+        final confirm = await showConfirmationDialog(
+          context: context,
+          title: "Update Account",
+          content:
+              "Do you want to save changes to ${widget.existingAccount!.name}?",
+          confirmText: "Update",
+          confirmColor: Colors.blue,
+        );
 
-      if (confirm != true) {
-        setState(() => _isLoading = false);
-        return;
+        if (confirm != true) return;
+
+        await accountsProvider.updateAccount(newAccount);
+      } else {
+        await accountsProvider.addAccount(newAccount);
       }
 
-      await accountsProvider.updateAccount(newAccount);
-    } else {
-      await accountsProvider.addAccount(newAccount);
-    }
+      if (!mounted) return;
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    Navigator.of(context).pop();
+      await ProviderReloader.reloadAll(context);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
