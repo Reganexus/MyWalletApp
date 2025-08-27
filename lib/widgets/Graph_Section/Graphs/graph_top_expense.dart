@@ -1,26 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:mywallet/models/transaction.dart';
+import 'package:mywallet/services/db_service.dart';
+import 'package:mywallet/services/forex_service.dart';
+import 'package:mywallet/utils/formatters.dart';
 
-class TopExpenseGraph extends StatelessWidget {
+class TopExpenseGraph extends StatefulWidget {
   final List<TransactionModel> transactions;
 
   const TopExpenseGraph({super.key, required this.transactions});
 
-  List<BarChartGroupData> get topExpenseBars {
-    Map<String, double> categorySums = {};
-    for (var tx in transactions) {
-      if (tx.type == 'expense') {
-        categorySums[tx.category] =
-            (categorySums[tx.category] ?? 0) + tx.amount;
-      }
-    }
-    final sorted =
-        categorySums.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
-    final top5 = sorted.take(5).toList();
+  @override
+  State<TopExpenseGraph> createState() => _TopExpenseGraphState();
+}
 
-    return top5.asMap().entries.map((entry) {
+class _TopExpenseGraphState extends State<TopExpenseGraph> {
+  String? _selectedCurrency;
+  List<String> _currencies = [];
+  Map<int, String> _accountCurrencyMap = {};
+  Map<String, double> _convertedExpenses = {};
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    final accounts = await DBService().getAccounts();
+    _accountCurrencyMap = {for (var a in accounts) a.id!: a.currency};
+
+    final dbCurrencies = await DBService().getCurrencies();
+    if (dbCurrencies.isNotEmpty) {
+      _selectedCurrency = dbCurrencies.first;
+      _currencies = dbCurrencies;
+      await _convertExpenses(_selectedCurrency!);
+    }
+
+    setState(() => _loading = false);
+  }
+
+  Future<void> _convertExpenses(String targetCurrency) async {
+    setState(() => _loading = true);
+
+    Map<String, double> categoryTotals = {};
+    for (var tx in widget.transactions) {
+      if (tx.type != 'expense') continue;
+
+      final accountCurrency = _accountCurrencyMap[tx.accountId] ?? 'PHP';
+      double amount = tx.amount;
+
+      if (accountCurrency != targetCurrency) {
+        final rate = await ForexService.getRate(
+          accountCurrency,
+          targetCurrency,
+        );
+        if (rate != null) amount *= rate;
+      }
+
+      categoryTotals[tx.category] = (categoryTotals[tx.category] ?? 0) + amount;
+    }
+
+    setState(() {
+      _convertedExpenses = categoryTotals;
+      _loading = false;
+    });
+  }
+
+  List<BarChartGroupData> get topExpenseBars {
+    final sorted =
+        _convertedExpenses.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.asMap().entries.map((entry) {
       final i = entry.key;
       final e = entry.value;
       return BarChartGroupData(
@@ -28,8 +80,8 @@ class TopExpenseGraph extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: e.value,
-            color: Colors.primaries[i % Colors.primaries.length].withAlpha(204),
-            width: 40,
+            color: Colors.primaries[i % Colors.primaries.length].withAlpha(244),
+            width: 250 / _convertedExpenses.length,
             borderRadius: BorderRadius.circular(4),
           ),
         ],
@@ -38,27 +90,10 @@ class TopExpenseGraph extends StatelessWidget {
   }
 
   List<String> get topExpenseLabels {
-    Map<String, double> categorySums = {};
-    for (var tx in transactions) {
-      if (tx.type == 'expense') {
-        categorySums[tx.category] =
-            (categorySums[tx.category] ?? 0) + tx.amount;
-      }
-    }
     final sorted =
-        categorySums.entries.toList()
+        _convertedExpenses.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
-    return sorted.take(5).map((e) => e.key).toList();
-  }
-
-  String _formatNumber(double value) {
-    if (value >= 1000000) {
-      return "${(value / 1000000).toStringAsFixed(1)}M";
-    } else if (value >= 1000) {
-      return "${(value / 1000).toStringAsFixed(1)}K";
-    } else {
-      return value.toStringAsFixed(0);
-    }
+    return sorted.map((e) => e.key).toList();
   }
 
   @override
@@ -67,71 +102,123 @@ class TopExpenseGraph extends StatelessWidget {
     final labels = topExpenseLabels;
 
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.all(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Top 5 Expense Categories",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            // Title + Currency Dropdown
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Expense Categories",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                if (_currencies.length > 1)
+                  DropdownButton<String>(
+                    value: _selectedCurrency,
+                    onChanged: (value) async {
+                      if (value == null) return;
+                      setState(() => _selectedCurrency = value);
+                      await _convertExpenses(value);
+                    },
+                    items:
+                        _currencies
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                  ),
+              ],
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 250,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  barGroups: bars,
-                  titlesData: FlTitlesData(
-                    show: true,
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            _formatNumber(value),
-                            style: const TextStyle(fontSize: 12),
-                          );
-                        },
+            const SizedBox(height: 24),
+
+            // Chart
+            _loading
+                ? const Center(child: CircularProgressIndicator())
+                : SizedBox(
+                  height: 250,
+                  child: BarChart(
+                    key: ValueKey(_selectedCurrency),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOut,
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      barGroups: bars,
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                formatNumber(
+                                  value,
+                                  currency: _selectedCurrency ?? 'PHP',
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipPadding: const EdgeInsets.all(8),
+                          tooltipMargin: 8,
+                          tooltipBorderRadius: BorderRadius.circular(8),
+                          getTooltipColor: (group) {
+                            return group.barRods.first.color ?? Colors.black;
+                          },
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final category = labels[group.x];
+                            final value = formatNumber(
+                              rod.toY,
+                              currency: _selectedCurrency ?? 'PHP',
+                            );
+                            return BarTooltipItem(
+                              "$category\n$value",
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine:
+                            (value) => FlLine(
+                              color: Colors.grey.withAlpha(40),
+                              strokeWidth: 1,
+                            ),
                       ),
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border(
-                      left: BorderSide(color: Colors.grey.shade300),
-                      bottom: BorderSide(color: Colors.grey.shade300),
-                    ),
-                  ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine:
-                        (value) => FlLine(
-                          color: Colors.grey.withAlpha(51),
-                          strokeWidth: 1,
-                        ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
+
+            const SizedBox(height: 24),
             // Legend
             Wrap(
-              spacing: 16,
+              spacing: 8,
               runSpacing: 8,
               children:
                   labels.asMap().entries.map((entry) {
@@ -140,13 +227,35 @@ class TopExpenseGraph extends StatelessWidget {
                     final color = Colors
                         .primaries[index % Colors.primaries.length]
                         .withAlpha(204);
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(width: 16, height: 16, color: color),
-                        const SizedBox(width: 8),
-                        Text(label, style: const TextStyle(fontSize: 14)),
-                      ],
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withAlpha(50),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            label,
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     );
                   }).toList(),
             ),

@@ -61,8 +61,21 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Wallet App',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
+          theme: ThemeData.light().copyWith(
+            textTheme: ThemeData.light().textTheme.apply(
+              fontFamily: 'SFPro',
+              bodyColor: Colors.black,
+              displayColor: Colors.black,
+            ),
+          ),
+          darkTheme: ThemeData.dark().copyWith(
+            textTheme: ThemeData.dark().textTheme.apply(
+              fontFamily: 'SFPro',
+              bodyColor: Colors.white,
+              displayColor: Colors.white,
+            ),
+          ),
+
           themeMode: themeProvider.themeMode,
           initialRoute: '/pin',
           routes: {

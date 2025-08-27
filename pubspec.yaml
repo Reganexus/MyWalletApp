@@ -26,5 +26,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
   assets:
     - .env
+
+  fonts:
+  - family: SFPro
+    fonts:
+      - asset: lib/assets/fonts/SFPRODISPLAYREGULAR.OTF
+        weight: 400
+      - asset: lib/assets/fonts/SFPRODISPLAYMEDIUM.OTF
+        weight: 500
+      - asset: lib/assets/fonts/SFPRODISPLAYBOLD.OTF
+        weight: 700
+

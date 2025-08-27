@@ -84,76 +84,64 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
                     .where((a) => a.currency == _selectedCurrency)
                     .toList();
 
-        return Card(
-          margin: const EdgeInsets.all(8),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        "Accounts",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (currencies.length > 1)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: DropdownButton<String>(
-                          value: _selectedCurrency,
-                          items:
-                              ["All", ...currencies]
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c,
-                                      child: Text(c),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() => _selectedCurrency = val);
-                            }
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-
-                // Show filtered accounts
-                ...filteredAccounts.map(
-                  (account) => _AccountCard(
-                    account: account,
-                    phpRate: provider.getPhpRate(account.currency),
+        return Padding(
+          padding: const EdgeInsets.all(16), // spacing around whole section
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    "Accounts",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton.icon(
-                      onPressed: _handleAddAccount,
-                      icon: const Icon(Icons.add),
-                      label: const Text("Add Account"),
+                  const Spacer(),
+                  if (currencies.length > 1)
+                    DropdownButton<String>(
+                      value: _selectedCurrency,
+                      items:
+                          ["All", ...currencies]
+                              .map(
+                                (c) =>
+                                    DropdownMenuItem(value: c, child: Text(c)),
+                              )
+                              .toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _selectedCurrency = val);
+                        }
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    TextButton.icon(
-                      onPressed: _handleManageAccounts,
-                      icon: const Icon(Icons.settings),
-                      label: const Text("Manage Accounts"),
-                    ),
-                  ],
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              ...filteredAccounts.map(
+                (account) => _AccountCard(
+                  account: account,
+                  phpRate: provider.getPhpRate(account.currency),
                 ),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton.icon(
+                    onPressed: _handleAddAccount,
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Account"),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton.icon(
+                    onPressed: _handleManageAccounts,
+                    icon: const Icon(Icons.settings),
+                    label: const Text("Manage Accounts"),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -172,49 +160,100 @@ class _AccountCard extends StatelessWidget {
     if (phpRate == null) {
       return const Text(
         "Fetching FX...",
-        style: TextStyle(fontSize: 12, color: Colors.white54),
+        style: TextStyle(fontSize: 12, color: Colors.white70),
       );
     }
 
     return Text(
-      formatBalance("PHP", account.balance * phpRate!),
-      style: const TextStyle(fontSize: 12, color: Colors.white),
+      "≈ ${formatBalance("PHP", account.balance * phpRate!)}",
+      style: const TextStyle(fontSize: 12, color: Colors.white70),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      color: account.color,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            account.color.withValues(alpha: 0.9), // instead of withOpacity(0.9)
+            account.color.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: account.color.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(
-              categoryIcons[account.category],
-              size: 40,
-              color: Colors.black54,
+            // Icon inside a subtle circle
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                categoryIcons[account.category],
+                size: 28,
+                color: Colors.white,
+              ),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  account.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+            const SizedBox(width: 16),
+
+            // Account details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    account.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatBalance(account.currency, account.balance),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  _buildPhpBalance(),
+                ],
+              ),
+            ),
+
+            // Currency tag
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                account.currency,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
-                Text(
-                  formatBalance(account.currency, account.balance),
-                  style: const TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-                _buildPhpBalance(),
-              ],
+              ),
             ),
           ],
         ),

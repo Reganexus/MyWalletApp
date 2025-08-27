@@ -21,3 +21,25 @@ String _currencySymbol(String currency) {
       return "$currency ";
   }
 }
+
+String formatFullBalance(double amount, {required String currency}) {
+  final formatter = NumberFormat.currency(
+    locale: 'en_US',
+    symbol: _currencySymbol(currency),
+    decimalDigits: 2, // always show cents
+  );
+  return formatter.format(amount);
+}
+
+/// For shortened numbers (K, M, no decimals for small numbers)
+String formatNumber(double value, {required String currency}) {
+  final symbol = _currencySymbol(currency);
+
+  if (value >= 1000000) {
+    return "$symbol${(value / 1000000).toStringAsFixed(1)}M";
+  } else if (value >= 1000) {
+    return "$symbol${(value / 1000).toStringAsFixed(1)}K";
+  } else {
+    return "$symbol${value.toStringAsFixed(0)}";
+  }
+}
