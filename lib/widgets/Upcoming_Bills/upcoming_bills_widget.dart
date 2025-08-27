@@ -32,7 +32,6 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
     );
 
     if (!mounted) return;
-
     if (updated == true) {
       context.read<BillProvider>().loadBills();
     }
@@ -57,75 +56,79 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
       builder: (context, provider, _) {
         final bills = provider.bills;
 
-        return Card(
-          margin: const EdgeInsets.all(8),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
+        if (bills.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Upcoming Bills",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: _handlePayBill,
-                      icon: const Icon(Icons.payment),
-                      label: const Text("Pay Bill"),
-                    ),
-                  ],
+                const SizedBox(height: 50),
+                const Text(
+                  "No upcoming bills",
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                if (bills.isEmpty) ...[
-                  const SizedBox(height: 50),
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: _handleAddBill,
+                  icon: const Icon(Icons.add),
+                  label: const Text("Add Bill"),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(16), // like AccountBalanceWidget
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
                   const Text(
-                    "No upcoming bills",
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                    textAlign: TextAlign.center,
+                    "Upcoming Bills",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 20),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _handlePayBill,
+                    icon: const Icon(Icons.payment),
+                    label: const Text("Pay Bill"),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Show bills
+              ...bills.map(
+                (bill) => _BillCard(
+                  bill: bill,
+                  formatter: formatter,
+                  isPaidThisMonth: isPaidThisMonth(bill),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   TextButton.icon(
                     onPressed: _handleAddBill,
                     icon: const Icon(Icons.add),
                     label: const Text("Add Bill"),
                   ),
-                ] else ...[
-                  ...bills.map(
-                    (bill) => SizedBox(
-                      width: double.infinity,
-                      child: _BillCard(
-                        bill: bill,
-                        formatter: formatter,
-                        isPaidThisMonth: isPaidThisMonth(bill),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton.icon(
-                        onPressed: _handleAddBill,
-                        icon: const Icon(Icons.add),
-                        label: const Text("Add Bill"),
-                      ),
-                      const SizedBox(width: 16),
-                      TextButton.icon(
-                        onPressed: _handleManageBills,
-                        icon: const Icon(Icons.settings),
-                        label: const Text("Manage Bills"),
-                      ),
-                    ],
+                  const SizedBox(width: 16),
+                  TextButton.icon(
+                    onPressed: _handleManageBills,
+                    icon: const Icon(Icons.settings),
+                    label: const Text("Manage Bills"),
                   ),
                 ],
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -148,50 +151,98 @@ class _BillCard extends StatelessWidget {
   Widget build(BuildContext context) {
     String subtitle;
     String statusText;
-    Color statusColor;
 
     if (isPaidThisMonth) {
       subtitle = "Paid on ${formatter.format(bill.datePaid!)}";
-      statusText = "Good for this month";
-      statusColor = Colors.green;
+      statusText = "Paid for this month";
     } else {
       subtitle = "Every ${bill.dueDate.day}";
       statusText = "Pending";
-      statusColor = Colors.orange;
     }
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      color: bill.color,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            bill.color.withValues(alpha: 0.9),
+            bill.color.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: bill.color.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              bill.name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.receipt_long,
+                size: 28,
                 color: Colors.white,
               ),
             ),
-            Text(
-              "₱${bill.amount.toStringAsFixed(2)}",
-              style: const TextStyle(fontSize: 14, color: Colors.white70),
+            const SizedBox(width: 16),
+
+            // Bill details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    bill.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "₱${bill.amount.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                ],
+              ),
             ),
-            Text(
-              subtitle,
-              style: const TextStyle(fontSize: 12, color: Colors.white70),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              statusText,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: statusColor,
+
+            // Status tag
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: bill.color.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                statusText,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // always white for contrast
+                ),
               ),
             ),
           ],

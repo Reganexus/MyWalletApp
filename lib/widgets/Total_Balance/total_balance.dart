@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/services/forex_service.dart';
+import 'package:mywallet/utils/formatters.dart';
 import 'package:provider/provider.dart';
 
 class TotalBalanceWidget extends StatefulWidget {
@@ -17,13 +17,12 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
   @override
   Widget build(BuildContext context) {
     final accounts = context.watch<AccountProvider>().accounts;
-    final formatter = NumberFormat("#,##0.00", "en_US");
 
     if (accounts.isEmpty) {
       return const Card(
-        margin: EdgeInsets.all(8),
+        margin: EdgeInsets.all(16),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(24),
           child: Text("No accounts available."),
         ),
       );
@@ -36,7 +35,7 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
           (grouped[account.currency] ?? 0) + account.balance;
     }
 
-    // Set default base currency if none selected
+    // Default to first currency
     _selectedCurrency ??= grouped.keys.first;
 
     // Convert total to selected currency
@@ -58,10 +57,28 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
 
     final hasMultipleCurrencies = grouped.keys.length > 1;
 
-    return Card(
-      margin: const EdgeInsets.all(8),
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.blue.withValues(alpha: 0.9),
+            Colors.indigo.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -71,9 +88,15 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
                 children: [
                   const Text(
                     "Total Balance",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   DropdownButton<String>(
+                    dropdownColor: Colors.black87,
+                    style: const TextStyle(color: Colors.white),
                     value: _selectedCurrency,
                     items:
                         grouped.keys
@@ -88,42 +111,50 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
             else
               const Text(
                 "Total Balance",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             FutureBuilder<double>(
               future: convertTotal(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Text("Calculating...");
+                  return const Text(
+                    "Calculating...",
+                    style: TextStyle(color: Colors.white70),
+                  );
                 }
                 if (snapshot.hasError) {
                   return Text(
                     "Error calculating total: ${snapshot.error}",
-                    style: const TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.redAccent),
                   );
                 }
                 final total = snapshot.data ?? 0;
                 return Text(
-                  "${formatter.format(total)} $_selectedCurrency",
+                  formatFullBalance(
+                    total,
+                    currency: _selectedCurrency ?? 'PHP',
+                  ),
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
+                    color: Colors.white,
                   ),
                 );
               },
             ),
-            const SizedBox(height: 12),
-            const Text(
-              "Breakdown",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             ...grouped.entries.map(
-              (entry) => Text(
-                "${entry.key} Accounts: ${formatter.format(entry.value)} ${entry.key}",
-                style: const TextStyle(fontSize: 14),
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  "${entry.key} Accounts: ${formatFullBalance(entry.value, currency: entry.key)}",
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
+                ),
               ),
             ),
           ],

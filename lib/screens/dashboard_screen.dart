@@ -21,24 +21,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text(
-          "Wallet Dashboard",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
+        automaticallyImplyLeading: false,
         scrolledUnderElevation: 0,
-        leading: GestureDetector(
-          onTap: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
-          child: const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundColor: Colors.blueGrey,
-              child: Icon(Icons.person, color: Colors.white),
-            ),
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                child: const CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.blueGrey,
+                  child: Icon(Icons.person, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "Wallet Dashboard",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
         ),
       ),
+
       drawer: const ProfileSidebar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(top: 8.0),
@@ -46,11 +55,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: const [
             TotalBalanceWidget(),
-            SizedBox(height: 16),
             AccountBalanceWidget(),
-            SizedBox(height: 16),
             UpcomingBillsWidget(),
-            SizedBox(height: 16),
             GraphsSectionWidget(),
           ],
         ),

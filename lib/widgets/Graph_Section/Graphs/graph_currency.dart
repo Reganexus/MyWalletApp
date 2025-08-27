@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/services/forex_service.dart';
+import 'package:mywallet/utils/formatters.dart';
 
 class BalanceByCurrencyChart extends StatefulWidget {
   final List<Account> accounts;
@@ -15,7 +16,7 @@ class BalanceByCurrencyChart extends StatefulWidget {
 class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
   String? _selectedCurrency;
   Map<String, double> _convertedBalances = {};
-  bool _loading = false;
+  bool _loading = true;
 
   @override
   void initState() {
@@ -25,8 +26,11 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
 
   Future<void> _initConversion() async {
     final currencies = widget.accounts.map((a) => a.currency).toSet().toList();
-    _selectedCurrency = currencies.first;
-    await _convertBalances(_selectedCurrency!);
+    if (currencies.isNotEmpty) {
+      _selectedCurrency = currencies.first;
+      await _convertBalances(_selectedCurrency!);
+    }
+    setState(() => _loading = false);
   }
 
   Future<void> _convertBalances(String targetCurrency) async {
@@ -35,6 +39,8 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
     Map<String, double> newBalances = {};
     for (var account in widget.accounts) {
       double balance = account.balance;
+
+      // Convert to target currency if needed
       if (account.currency != targetCurrency) {
         final rate = await ForexService.getRate(
           account.currency,
@@ -42,8 +48,9 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
         );
         if (rate != null) balance *= rate;
       }
-      newBalances[account.currency] =
-          (newBalances[account.currency] ?? 0) + balance;
+
+      // Key by account name
+      newBalances[account.name] = balance;
     }
 
     setState(() {
@@ -52,26 +59,47 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
     });
   }
 
-  String _formatNumber(double value) {
-    if (value >= 1000000) {
-      return "${(value / 1000000).toStringAsFixed(1)}M";
-    } else if (value >= 1000) {
-      return "${(value / 1000).toStringAsFixed(1)}K";
-    } else {
-      return value.toStringAsFixed(0);
-    }
+  List<BarChartGroupData> get bars {
+    final sorted =
+        _convertedBalances.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sorted.asMap().entries.map((entry) {
+      final i = entry.key;
+      final e = entry.value;
+      return BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            toY: e.value,
+            width: 250 / _convertedBalances.length,
+            borderRadius: BorderRadius.circular(6),
+            color: Colors.primaries[i % Colors.primaries.length].withAlpha(204),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
+  List<String> get labels {
+    final sorted =
+        _convertedBalances.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.map((e) => e.key).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final currencies = widget.accounts.map((a) => a.currency).toSet().toList();
+    final chartBars = bars;
+    final chartLabels = labels;
 
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.all(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Title + Dropdown
             Row(
@@ -79,7 +107,7 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
               children: [
                 const Text(
                   "Balance by Currency",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 if (currencies.length > 1)
                   DropdownButton<String>(
@@ -98,62 +126,40 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // Chart or Loader
+            // Chart
             _loading
-                ? const CircularProgressIndicator()
+                ? const Center(child: CircularProgressIndicator())
                 : SizedBox(
                   height: 250,
                   child: BarChart(
+                    key: ValueKey(_selectedCurrency),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOut,
                     BarChartData(
                       alignment: BarChartAlignment.spaceAround,
-                      barGroups:
-                          _convertedBalances.entries
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                                final index = entry.key;
-                                // e.g. "USD"
-                                final balanceInTarget =
-                                    entry.value.value; // e.g. 11,000 PHP
-
-                                return BarChartGroupData(
-                                  x: index,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: balanceInTarget,
-                                      width: 40,
-                                      borderRadius: BorderRadius.circular(6),
-                                      color: Colors
-                                          .primaries[index %
-                                              Colors.primaries.length]
-                                          .withAlpha(204),
-                                    ),
-                                  ],
-                                );
-                              })
-                              .toList(),
-
+                      barGroups: chartBars,
                       titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: false, // we’ll use legend instead
-                          ),
-                        ),
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 40,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                _formatNumber(value),
-                                style: const TextStyle(fontSize: 12),
-                              );
-                            },
+                            reservedSize: 50,
+                            getTitlesWidget:
+                                (value, meta) => Text(
+                                  formatNumber(
+                                    value,
+                                    currency: _selectedCurrency ?? 'PHP',
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                           ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
@@ -162,19 +168,38 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
                           sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                      borderData: FlBorderData(
-                        show: true,
-                        border: Border(
-                          left: BorderSide(color: Colors.grey.shade300),
-                          bottom: BorderSide(color: Colors.grey.shade300),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipPadding: const EdgeInsets.all(8),
+                          tooltipMargin: 8,
+                          tooltipBorderRadius: BorderRadius.circular(8),
+                          getTooltipColor:
+                              (group) =>
+                                  group.barRods.first.color ?? Colors.black,
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final currency = chartLabels[group.x];
+                            final value = formatNumber(
+                              rod.toY,
+                              currency: _selectedCurrency ?? 'PHP',
+                            );
+                            return BarTooltipItem(
+                              "$currency\n$value",
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
                         ),
                       ),
+                      borderData: FlBorderData(show: false),
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
                         getDrawingHorizontalLine:
                             (value) => FlLine(
-                              color: Colors.grey.withAlpha(51),
+                              color: Colors.grey.withAlpha(40),
                               strokeWidth: 1,
                             ),
                       ),
@@ -182,26 +207,43 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
                   ),
                 ),
 
+            const SizedBox(height: 24),
             // Legend
-            const SizedBox(height: 16),
             Wrap(
-              spacing: 16,
+              spacing: 8,
               runSpacing: 8,
               children:
-                  _convertedBalances.keys.toList().asMap().entries.map((entry) {
+                  chartLabels.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final currency = entry.value;
+                    final label = entry.value;
                     final color = Colors
                         .primaries[index % Colors.primaries.length]
                         .withAlpha(204);
 
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(width: 16, height: 16, color: color),
-                        const SizedBox(width: 8),
-                        Text(currency, style: const TextStyle(fontSize: 14)),
-                      ],
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withAlpha(50),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(label, style: const TextStyle(fontSize: 13)),
+                        ],
+                      ),
                     );
                   }).toList(),
             ),

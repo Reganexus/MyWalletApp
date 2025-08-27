@@ -15,28 +15,41 @@ class ProfileSidebar extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blueGrey),
-            child: Text(
-              "Profile Sidebar",
-              style: TextStyle(color: Colors.white, fontSize: 20),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.blueGrey),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: const [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.white70,
+                  child: Icon(Icons.person, size: 32, color: Colors.blueGrey),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  "User Profile",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              ],
             ),
           ),
+
+          // Theme toggle
           ListTile(
             leading: const Icon(Icons.dark_mode),
             title: const Text("Dark Mode"),
             trailing: Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) {
-                return Switch(
-                  value: themeProvider.isDarkMode,
-                  onChanged: (value) {
-                    themeProvider.toggleTheme(value);
-                  },
-                );
-              },
+              builder:
+                  (context, themeProvider, _) => Switch(
+                    value: themeProvider.isDarkMode,
+                    onChanged: themeProvider.toggleTheme,
+                  ),
             ),
           ),
+          const Divider(),
 
+          // Account & History
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text("Transaction History"),
@@ -59,6 +72,9 @@ class ProfileSidebar extends StatelessWidget {
               );
             },
           ),
+          const Divider(),
+
+          // Backup & Data
           ListTile(
             leading: const Icon(Icons.backup),
             title: const Text("Backup & Restore"),
@@ -79,9 +95,20 @@ class ProfileSidebar extends StatelessWidget {
               );
             },
           ),
-          const ListTile(
-            leading: Icon(Icons.info),
-            title: Text("About / Version"),
+          const Divider(),
+
+          // About / Version
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text("About / Version"),
+            onTap: () {
+              showAboutDialog(
+                context: context,
+                applicationName: "MyWallet",
+                applicationVersion: "v1.0.0",
+                children: const [Text("Personal finance tracker app")],
+              );
+            },
           ),
         ],
       ),

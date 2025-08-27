@@ -18,6 +18,14 @@ class ColorUtils {
     Colors.deepPurple,
   ];
 
+  static const List<Color> graphColors = [
+    Color(0xFF4A90E2),
+    Color(0xFF50E3C2),
+    Color(0xFFF5A623),
+    Color(0xFFD0021B),
+    Color(0xFF9013FE),
+  ];
+
   /// Ensures text contrast is accessible (white or black depending on bg).
   static Color getContrastingTextColor(Color bgColor) {
     return bgColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;

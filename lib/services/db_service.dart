@@ -294,4 +294,10 @@ class DBService {
       whereArgs: [tx.id],
     );
   }
+
+  Future<List<String>> getCurrencies() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT DISTINCT currency FROM accounts');
+    return result.map((row) => row['currency'] as String).toList();
+  }
 }
