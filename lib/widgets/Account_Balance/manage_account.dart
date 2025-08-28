@@ -4,7 +4,7 @@ import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
 import 'package:mywallet/utils/add_modal.dart';
 import 'package:mywallet/widgets/Account_Balance/add_account_modal.dart';
-import 'package:mywallet/widgets/confirmation_dialog.dart';
+import 'package:mywallet/utils/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ManageAccountsScreen extends StatefulWidget {

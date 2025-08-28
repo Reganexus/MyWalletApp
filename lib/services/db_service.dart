@@ -1,3 +1,4 @@
+import 'package:mywallet/models/profile.dart';
 import 'package:mywallet/models/transaction.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -47,6 +48,15 @@ class DBService {
 
   Future<void> _createDB(Database db, int version) async {
     // ---------------- Schema ----------------
+    await db.execute('''
+    CREATE TABLE profile (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      profile_image BLOB,
+      color_preference TEXT
+    )
+  ''');
+
     await db.execute('''
     CREATE TABLE accounts(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -299,5 +309,23 @@ class DBService {
     final db = await database;
     final result = await db.rawQuery('SELECT DISTINCT currency FROM accounts');
     return result.map((row) => row['currency'] as String).toList();
+  }
+
+  Future<int> saveProfile(Profile profile) async {
+    final db = await database;
+    return await db.insert(
+      'profile',
+      profile.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<Profile?> getProfile() async {
+    final db = await database;
+    final result = await db.query('profile', limit: 1);
+    if (result.isNotEmpty) {
+      return Profile.fromMap(result.first);
+    }
+    return null;
   }
 }

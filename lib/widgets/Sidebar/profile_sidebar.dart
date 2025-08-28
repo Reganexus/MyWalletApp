@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/theme_provider.dart';
+import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
 import 'package:mywallet/widgets/Sidebar/change_pin.dart';
 import 'package:mywallet/widgets/Sidebar/delete_data.dart';
+import 'package:mywallet/widgets/Sidebar/edit_profile_screen.dart';
 import 'package:mywallet/widgets/Sidebar/transaction_history_page.dart';
 import 'package:provider/provider.dart';
 
@@ -15,41 +17,102 @@ class ProfileSidebar extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Colors.blueGrey),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: const [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white70,
-                  child: Icon(Icons.person, size: 32, color: Colors.blueGrey),
+          Consumer<ProfileProvider>(
+            builder: (context, profileProvider, _) {
+              final profile = profileProvider.profile;
+              final username = profile?.username ?? "User";
+              final colorPref = profile?.colorPreference;
+              final bgColor =
+                  colorPref != null
+                      ? Color(int.parse(colorPref))
+                      : Colors.blueGrey;
+
+              return DrawerHeader(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      bgColor.withValues(alpha: 0.6),
+                      bgColor.withValues(alpha: 0.9),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-                SizedBox(height: 12),
-                Text(
-                  "User Profile",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+                margin: EdgeInsets.zero,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundImage:
+                          profile?.profileImage != null
+                              ? MemoryImage(profile!.profileImage!)
+                              : null,
+                      backgroundColor: Colors.white70,
+                      child:
+                          profile?.profileImage == null
+                              ? const Icon(
+                                Icons.person,
+                                size: 36,
+                                color: Colors.blueGrey,
+                              )
+                              : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
 
           // Theme toggle
           ListTile(
             leading: const Icon(Icons.dark_mode),
             title: const Text("Dark Mode"),
-            trailing: Consumer<ThemeProvider>(
-              builder:
-                  (context, themeProvider, _) => Switch(
-                    value: themeProvider.isDarkMode,
-                    onChanged: themeProvider.toggleTheme,
-                  ),
+            trailing: Consumer2<ThemeProvider, ProfileProvider>(
+              builder: (context, themeProvider, profileProvider, _) {
+                final profile = profileProvider.profile;
+                final userColor =
+                    profile?.colorPreference != null
+                        ? Color(int.parse(profile!.colorPreference!))
+                        : Colors.blueGrey;
+
+                return Switch(
+                  value: themeProvider.isDarkMode,
+                  onChanged: themeProvider.toggleTheme,
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: userColor,
+                  inactiveThumbColor: userColor,
+                  inactiveTrackColor: userColor.withValues(alpha: 0.5),
+                  trackOutlineColor: WidgetStateProperty.all(Colors.white70),
+                );
+              },
             ),
           ),
+
           const Divider(),
 
           // Account & History
+          ListTile(
+            leading: const Icon(Icons.edit),
+            title: const Text("Edit Profile"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text("Transaction History"),

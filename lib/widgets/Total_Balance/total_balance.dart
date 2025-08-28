@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/services/forex_service.dart';
 import 'package:mywallet/utils/formatters.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,7 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
   @override
   Widget build(BuildContext context) {
     final accounts = context.watch<AccountProvider>().accounts;
+    final profile = context.watch<ProfileProvider>().profile;
 
     if (accounts.isEmpty) {
       return const Card(
@@ -27,6 +29,12 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
         ),
       );
     }
+
+    // User preferred color (fallback if not set)
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
 
     // Group balances by currency
     final Map<String, double> grouped = {};
@@ -62,8 +70,10 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withValues(alpha: 0.9),
-            Colors.indigo.withValues(alpha: 0.7),
+            baseColor.withValues(alpha: 0.9),
+            baseColor.withValues(alpha: 0.7),
+            baseColor.withValues(alpha: 0.5),
+            baseColor.withValues(alpha: 0.3),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -71,8 +81,8 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.3),
-            blurRadius: 12,
+            color: baseColor.withValues(alpha: 0.3),
+            blurRadius: 8,
             offset: const Offset(0, 6),
           ),
         ],
@@ -152,7 +162,7 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
               (entry) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Text(
-                  "${entry.key} Accounts: ${formatFullBalance(entry.value, currency: entry.key)}",
+                  "${entry.key}: ${formatFullBalance(entry.value, currency: entry.key)}",
                   style: const TextStyle(fontSize: 14, color: Colors.white70),
                 ),
               ),
