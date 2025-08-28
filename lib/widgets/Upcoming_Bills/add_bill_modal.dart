@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/utils/color_utils.dart';
-import 'package:mywallet/widgets/confirmation_dialog.dart';
+import 'package:mywallet/utils/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 
 class AddBillForm extends StatefulWidget {

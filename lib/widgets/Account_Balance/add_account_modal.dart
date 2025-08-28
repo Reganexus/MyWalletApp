@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/utils/color_utils.dart';
-import 'package:mywallet/widgets/confirmation_dialog.dart';
+import 'package:mywallet/utils/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 
 class AddAccountForm extends StatefulWidget {

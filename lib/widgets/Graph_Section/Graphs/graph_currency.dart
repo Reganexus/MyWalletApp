@@ -40,7 +40,6 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
     for (var account in widget.accounts) {
       double balance = account.balance;
 
-      // Convert to target currency if needed
       if (account.currency != targetCurrency) {
         final rate = await ForexService.getRate(
           account.currency,
@@ -49,8 +48,8 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
         if (rate != null) balance *= rate;
       }
 
-      // Key by account name
-      newBalances[account.name] = balance;
+      newBalances[account.currency] =
+          (newBalances[account.currency] ?? 0) + balance;
     }
 
     setState(() {
@@ -91,6 +90,9 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
   @override
   Widget build(BuildContext context) {
     final currencies = widget.accounts.map((a) => a.currency).toSet().toList();
+
+    if (currencies.length <= 1) return const SizedBox.shrink();
+
     final chartBars = bars;
     final chartLabels = labels;
 

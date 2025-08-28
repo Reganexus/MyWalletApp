@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/bill_provider.dart';
+import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/providers/theme_provider.dart';
 import 'package:mywallet/providers/transaction_provider.dart';
 import 'package:mywallet/screens/dashboard_screen.dart';
@@ -40,6 +41,10 @@ void main() async {
             txProvider!.accountProvider = accountProvider;
             return txProvider;
           },
+        ),
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (_) => ProfileProvider(db: dbService)..loadProfile(),
         ),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],

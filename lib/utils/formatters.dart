@@ -1,5 +1,19 @@
 import 'package:intl/intl.dart';
 
+String formatDay(int date) {
+  final dayFormatter = date;
+
+  if (dayFormatter == 1) {
+    return "${dayFormatter}st";
+  } else if (dayFormatter == 2) {
+    return "${dayFormatter}nd";
+  } else if (dayFormatter == 3) {
+    return "${dayFormatter}rd";
+  } else {
+    return "${dayFormatter}th";
+  }
+}
+
 String formatBalance(String currency, double amount) {
   final formatter = NumberFormat.currency(
     locale: 'en_US',
