@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/theme_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/widgets/Sidebar/about.dart';
 import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
 import 'package:mywallet/widgets/Sidebar/change_pin.dart';
 import 'package:mywallet/widgets/Sidebar/delete_data.dart';
@@ -23,9 +24,7 @@ class ProfileSidebar extends StatelessWidget {
               final username = profile?.username ?? "User";
               final colorPref = profile?.colorPreference;
               final bgColor =
-                  colorPref != null
-                      ? Color(int.parse(colorPref))
-                      : Colors.blueGrey;
+                  colorPref != null ? Color(int.parse(colorPref)) : Colors.blue;
 
               return DrawerHeader(
                 decoration: BoxDecoration(
@@ -50,13 +49,13 @@ class ProfileSidebar extends StatelessWidget {
                           profile?.profileImage != null
                               ? MemoryImage(profile!.profileImage!)
                               : null,
-                      backgroundColor: Colors.white70,
+                      backgroundColor: bgColor.withValues(alpha: 0.2),
                       child:
                           profile?.profileImage == null
-                              ? const Icon(
+                              ? Icon(
                                 Icons.person,
                                 size: 36,
-                                color: Colors.blueGrey,
+                                color: Colors.white,
                               )
                               : null,
                     ),
@@ -165,11 +164,9 @@ class ProfileSidebar extends StatelessWidget {
             leading: const Icon(Icons.info),
             title: const Text("About / Version"),
             onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: "MyWallet",
-                applicationVersion: "v1.0.0",
-                children: const [Text("Personal finance tracker app")],
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const About()),
               );
             },
           ),

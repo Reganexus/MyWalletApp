@@ -17,13 +17,13 @@ String formatDay(int date) {
 String formatBalance(String currency, double amount) {
   final formatter = NumberFormat.currency(
     locale: 'en_US',
-    symbol: _currencySymbol(currency),
+    symbol: currencySymbol(currency),
     decimalDigits: 2,
   );
   return formatter.format(amount);
 }
 
-String _currencySymbol(String currency) {
+String currencySymbol(String currency) {
   switch (currency) {
     case "PHP":
       return "₱";
@@ -31,23 +31,46 @@ String _currencySymbol(String currency) {
       return "\$";
     case "EUR":
       return "€";
+    case "JPY":
+      return "¥";
+    case "GBP":
+      return "£";
+    case "AUD":
+      return "A\$";
+    case "CAD":
+      return "C\$";
+    case "SGD":
+      return "S\$";
+    case "HKD":
+      return "HK\$";
+    case "INR":
+      return "₹";
+    case "KRW":
+      return "₩";
+    case "CNY":
+      return "¥";
+    case "THB":
+      return "฿";
+    case "IDR":
+      return "Rp";
+    case "MYR":
+      return "RM";
     default:
-      return "$currency ";
+      return currency.trim().isEmpty ? "?" : currency;
   }
 }
 
 String formatFullBalance(double amount, {required String currency}) {
   final formatter = NumberFormat.currency(
     locale: 'en_US',
-    symbol: _currencySymbol(currency),
-    decimalDigits: 2, // always show cents
+    symbol: currencySymbol(currency),
+    decimalDigits: 2,
   );
   return formatter.format(amount);
 }
 
-/// For shortened numbers (K, M, no decimals for small numbers)
 String formatNumber(double value, {required String currency}) {
-  final symbol = _currencySymbol(currency);
+  final symbol = currencySymbol(currency);
 
   if (value >= 1000000) {
     return "$symbol${(value / 1000000).toStringAsFixed(1)}M";

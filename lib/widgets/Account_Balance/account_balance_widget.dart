@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/account_provider.dart';
-import 'package:mywallet/utils/add_modal.dart';
-import 'package:mywallet/utils/currency_filter.dart';
-import 'package:mywallet/utils/layout_pref.dart';
+import 'package:mywallet/utils/WidgetHelper/add_manage.dart';
+import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
+import 'package:mywallet/utils/Currency/currency_filter.dart';
+import 'package:mywallet/services/layout_pref.dart';
 import 'package:mywallet/widgets/Account_Balance/account_empty.dart';
+import 'package:mywallet/widgets/Account_Balance/account_form.dart';
 import 'package:mywallet/widgets/Account_Balance/account_list_view.dart';
-import 'package:mywallet/widgets/Account_Balance/add_account_modal.dart';
 import 'package:mywallet/widgets/Account_Balance/manage_account.dart';
-import 'package:mywallet/utils/add_manage.dart';
 import 'package:provider/provider.dart';
 
 class AccountBalanceWidget extends StatefulWidget {
@@ -38,7 +38,7 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
   void _handleAddAccount() {
     showDraggableModal(
       context: context,
-      child: const AddAccountForm(existingAccount: null),
+      child: const AccountForm(existingAccount: null),
     );
   }
 
@@ -68,8 +68,15 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
         // Get unique currencies
         final currencies =
             accounts.map((a) => a.currency).toSet().toList()..sort();
-        _selectedCurrency ??= currencies.length > 1 ? "All" : currencies.first;
 
+        // 🔑 Ensure _selectedCurrency is always valid
+        if (_selectedCurrency == null ||
+            (_selectedCurrency != "All" &&
+                !currencies.contains(_selectedCurrency))) {
+          _selectedCurrency = currencies.length > 1 ? "All" : currencies.first;
+        }
+
+        // Filter accounts by currency
         final filteredAccounts =
             _selectedCurrency == "All"
                 ? accounts
@@ -83,7 +90,7 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
         };
 
         return Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -94,13 +101,16 @@ class _AccountBalanceWidgetState extends State<AccountBalanceWidget> {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
-                  CurrencyFilter(
-                    currencies: currencies,
-                    selectedCurrency: _selectedCurrency,
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedCurrency = val);
-                    },
-                  ),
+                  if (currencies.length > 1)
+                    CurrencyFilter(
+                      currencies: currencies,
+                      selectedCurrency: _selectedCurrency,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _selectedCurrency = val);
+                        }
+                      },
+                    ),
                   const SizedBox(width: 12),
                   GestureDetector(
                     onTap: _toggleLayout,

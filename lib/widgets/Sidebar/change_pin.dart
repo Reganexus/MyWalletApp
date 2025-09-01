@@ -6,6 +6,6 @@ class ChangePinPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PinScreen(mode: PinMode.change);
+    return const PinScreen(mode: PinMode.change, hasPin: true);
   }
 }

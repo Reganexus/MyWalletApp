@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:mywallet/models/account.dart';
+import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/services/forex_service.dart';
-import 'package:mywallet/utils/formatters.dart';
+import 'package:mywallet/utils/Design/chart_legend.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
+import 'package:provider/provider.dart';
 
 class BalanceByCurrencyChart extends StatefulWidget {
   final List<Account> accounts;
@@ -21,35 +25,52 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
   @override
   void initState() {
     super.initState();
-    _initConversion();
+    _updateBalances();
   }
 
-  Future<void> _initConversion() async {
-    final currencies = widget.accounts.map((a) => a.currency).toSet().toList();
-    if (currencies.isNotEmpty) {
-      _selectedCurrency = currencies.first;
-      await _convertBalances(_selectedCurrency!);
+  // ADDED: The key fix for dynamic updates.
+  @override
+  void didUpdateWidget(covariant BalanceByCurrencyChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if the list of accounts has changed.
+    if (widget.accounts != oldWidget.accounts) {
+      _updateBalances();
     }
-    setState(() => _loading = false);
   }
 
-  Future<void> _convertBalances(String targetCurrency) async {
+  Future<void> _updateBalances() async {
     setState(() => _loading = true);
 
-    Map<String, double> newBalances = {};
-    for (var account in widget.accounts) {
-      double balance = account.balance;
+    final accounts = context.read<AccountProvider>().accounts;
+    final currencies = accounts.map((a) => a.currency).toSet().toList();
 
-      if (account.currency != targetCurrency) {
-        final rate = await ForexService.getRate(
-          account.currency,
-          targetCurrency,
-        );
-        if (rate != null) balance *= rate;
+    // CORRECTED: Check if the list is empty before accessing its first element.
+    if (currencies.isNotEmpty) {
+      if (_selectedCurrency == null ||
+          !currencies.contains(_selectedCurrency)) {
+        _selectedCurrency = currencies.first;
       }
+    } else {
+      _selectedCurrency = null;
+    }
 
-      newBalances[account.currency] =
-          (newBalances[account.currency] ?? 0) + balance;
+    Map<String, double> newBalances = {};
+    // CORRECTED: Do not proceed if no currency is selected
+    if (_selectedCurrency != null) {
+      for (var account in accounts) {
+        double balance = account.balance;
+
+        if (account.currency != _selectedCurrency) {
+          final rate = await ForexService.getRate(
+            account.currency,
+            _selectedCurrency!,
+          );
+          if (rate != null) balance *= rate;
+        }
+
+        newBalances[account.currency] =
+            (newBalances[account.currency] ?? 0) + balance;
+      }
     }
 
     setState(() {
@@ -58,7 +79,11 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
     });
   }
 
-  List<BarChartGroupData> get bars {
+  List<BarChartGroupData> get _bars {
+    if (_convertedBalances.isEmpty) {
+      return [];
+    }
+
     final sorted =
         _convertedBalances.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
@@ -73,14 +98,14 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
             toY: e.value,
             width: 250 / _convertedBalances.length,
             borderRadius: BorderRadius.circular(6),
-            color: Colors.primaries[i % Colors.primaries.length].withAlpha(204),
+            color: Colors.primaries[i % Colors.primaries.length].withAlpha(199),
           ),
         ],
       );
     }).toList();
   }
 
-  List<String> get labels {
+  List<String> get _labels {
     final sorted =
         _convertedBalances.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
@@ -88,169 +113,187 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final accounts = context.watch<AccountProvider>().accounts;
+    final currencies = accounts.map((a) => a.currency).toSet().toList();
+
+    bool needsUpdate = false;
+
+    // CORRECTED: Handle case where account list becomes empty
+    if (accounts.isEmpty) {
+      if (_convertedBalances.isNotEmpty) {
+        _convertedBalances = {};
+        needsUpdate = true;
+      }
+    } else {
+      for (var a in accounts) {
+        if (!_convertedBalances.containsKey(a.currency)) {
+          needsUpdate = true;
+          break;
+        }
+      }
+    }
+
+    // CORRECTED: Check for empty list before accessing first element
+    if (currencies.isNotEmpty) {
+      if (_selectedCurrency == null ||
+          !currencies.contains(_selectedCurrency)) {
+        _selectedCurrency = currencies.first;
+        needsUpdate = true;
+      }
+    } else {
+      // If there are no currencies, set selected currency to null to avoid errors.
+      if (_selectedCurrency != null) {
+        _selectedCurrency = null;
+        needsUpdate = true;
+      }
+    }
+
+    if (needsUpdate) {
+      _updateBalances();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final currencies = widget.accounts.map((a) => a.currency).toSet().toList();
+    final accounts = context.watch<AccountProvider>().accounts;
+    final currencies = accounts.map((a) => a.currency).toSet().toList();
+    final showDropdown = currencies.length > 1;
+    final profile = context.watch<ProfileProvider>().profile;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
 
-    if (currencies.length <= 1) return const SizedBox.shrink();
+    // CORRECTED: The check is now for the accounts list itself
+    if (accounts.isEmpty || currencies.length <= 1) {
+      return const SizedBox.shrink();
+    }
 
-    final chartBars = bars;
-    final chartLabels = labels;
-
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title + Dropdown
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Balance by Currency",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                if (currencies.length > 1)
-                  DropdownButton<String>(
-                    value: _selectedCurrency,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      setState(() => _selectedCurrency = value);
-                      await _convertBalances(value);
-                    },
-                    items:
-                        currencies
-                            .map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)),
-                            )
-                            .toList(),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title + Dropdown
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Balance by Currency",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              if (showDropdown)
+                DropdownButton<String>(
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
-              ],
-            ),
-            const SizedBox(height: 24),
+                  value: _selectedCurrency,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    setState(() => _selectedCurrency = value);
+                    await _updateBalances();
+                  },
+                  items:
+                      currencies
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
+                ),
+            ],
+          ),
 
-            // Chart
-            _loading
-                ? const Center(child: CircularProgressIndicator())
-                : SizedBox(
-                  height: 250,
-                  child: BarChart(
-                    key: ValueKey(_selectedCurrency),
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.easeOut,
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      barGroups: chartBars,
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            getTitlesWidget:
-                                (value, meta) => Text(
-                                  formatNumber(
-                                    value,
-                                    currency: _selectedCurrency ?? 'PHP',
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
+          const SizedBox(height: 24),
+
+          // Chart
+          _loading
+              ? Center(child: CircularProgressIndicator(color: baseColor))
+              : SizedBox(
+                height: 250,
+                child: BarChart(
+                  key: ValueKey(_selectedCurrency),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeOut,
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    barGroups: _bars,
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 50,
+                          getTitlesWidget:
+                              (value, meta) => Text(
+                                // CORRECTED: Add null check for _selectedCurrency
+                                formatNumber(
+                                  value,
+                                  currency: _selectedCurrency ?? 'PHP',
                                 ),
-                          ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      barTouchData: BarTouchData(
-                        enabled: true,
-                        touchTooltipData: BarTouchTooltipData(
-                          tooltipPadding: const EdgeInsets.all(8),
-                          tooltipMargin: 8,
-                          tooltipBorderRadius: BorderRadius.circular(8),
-                          getTooltipColor:
-                              (group) =>
-                                  group.barRods.first.color ?? Colors.black,
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final currency = chartLabels[group.x];
-                            final value = formatNumber(
-                              rod.toY,
-                              currency: _selectedCurrency ?? 'PHP',
-                            );
-                            return BarTooltipItem(
-                              "$currency\n$value",
-                              const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
                               ),
-                            );
-                          },
                         ),
                       ),
-                      borderData: FlBorderData(show: false),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine:
-                            (value) => FlLine(
-                              color: Colors.grey.withAlpha(40),
-                              strokeWidth: 1,
-                            ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
                       ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        tooltipPadding: const EdgeInsets.all(8),
+                        tooltipMargin: 8,
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        getTooltipColor:
+                            (group) =>
+                                group.barRods.first.color ?? Colors.black,
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final currency = _labels[group.x];
+                          final value = formatNumber(
+                            rod.toY,
+                            // CORRECTED: Add null check for _selectedCurrency
+                            currency: _selectedCurrency ?? 'PHP',
+                          );
+                          return BarTooltipItem(
+                            "$currency\n$value",
+                            const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine:
+                          (value) => FlLine(
+                            color: Colors.grey.withAlpha(40),
+                            strokeWidth: 1,
+                          ),
                     ),
                   ),
                 ),
+              ),
 
-            const SizedBox(height: 24),
-            // Legend
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  chartLabels.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final label = entry.value;
-                    final color = Colors
-                        .primaries[index % Colors.primaries.length]
-                        .withAlpha(204);
+          const SizedBox(height: 24),
 
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withAlpha(50),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(label, style: const TextStyle(fontSize: 13)),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-            ),
-          ],
-        ),
+          // Legend
+          ChartLegend(labels: _labels),
+        ],
       ),
     );
   }

@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
-import 'package:mywallet/utils/add_modal.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/add_bill_modal.dart';
-import 'package:mywallet/utils/confirmation_dialog.dart';
+import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
+import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
+import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
 import 'package:provider/provider.dart';
 
 class ManageBillsScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
   Future<void> _editBill(Bill bill) async {
     await showDraggableModal(
       context: context,
-      child: AddBillForm(existingBill: bill),
+      child: BillForm(existingBill: bill),
     );
   }
 
@@ -59,43 +59,56 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
     ).format(bill.amount);
 
     return Card(
-      color: bill.color,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _editBill(bill),
-        child: ListTile(
-          leading: _buildStatusIndicator(bill.status),
-          title: Text(
-            bill.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          subtitle: Text(
-            "$amountStr - Due: $dueDateStr",
-            style: const TextStyle(color: Colors.white70),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Tooltip(
-                message: "Edit Bill",
-                child: IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.white),
-                  onPressed: () => _editBill(bill),
-                ),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        leading: _buildStatusIndicator(bill.status),
+        title: Text(
+          bill.name,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        ),
+        subtitle: Text(
+          "$amountStr - Due: $dueDateStr",
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+        ),
+        trailing: GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              Tooltip(
-                message: "Delete Bill",
-                child: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteBill(bill),
-                ),
-              ),
-            ],
-          ),
+              builder: (_) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.edit, color: Colors.blue),
+                        title: const Text("Edit"),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _editBill(bill);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.delete, color: Colors.red),
+                        title: const Text("Delete"),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _deleteBill(bill);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          child: const Icon(Icons.more_vert),
         ),
       ),
     );
@@ -106,19 +119,68 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
     final bills = context.watch<BillProvider>().bills;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Manage Bills")),
+      appBar: AppBar(
+        title: const Text("Manage Bills"),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0.0,
+        elevation: 0.0,
+        titleSpacing: 0,
+      ),
       body:
           bills.isEmpty
               ? const Center(child: Text("No bills found"))
-              : ListView.separated(
-                padding: const EdgeInsets.all(8),
-                itemCount: bills.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 6),
-                itemBuilder: (context, index) {
-                  final bill = bills[index];
-                  return _buildBillCard(bill);
-                },
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        _buildLegendItem(Colors.green, "Paid"),
+                        const SizedBox(width: 8),
+                        _buildLegendItem(Colors.orange, "Unpaid"),
+                      ],
+                    ),
+                  ),
+
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: bills.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 6),
+                      itemBuilder: (context, index) {
+                        final bill = bills[index];
+                        return _buildBillCard(bill);
+                      },
+                    ),
+                  ),
+                ],
               ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withAlpha(50),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 13)),
+        ],
+      ),
     );
   }
 }

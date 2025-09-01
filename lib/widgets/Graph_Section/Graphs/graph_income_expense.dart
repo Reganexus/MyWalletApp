@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'package:mywallet/models/transaction.dart';
-import 'package:mywallet/services/db_service.dart';
+import 'package:mywallet/providers/account_provider.dart';
+import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/services/forex_service.dart';
-import 'package:mywallet/utils/formatters.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
+import 'package:provider/provider.dart';
 
 class IncomeExpenseTrendGraph extends StatefulWidget {
   final List<TransactionModel> transactions;
@@ -17,238 +20,292 @@ class IncomeExpenseTrendGraph extends StatefulWidget {
 
 class _IncomeExpenseTrendGraphState extends State<IncomeExpenseTrendGraph> {
   String? _selectedCurrency;
-  List<String> _currencies = [];
   Map<int, String> _accountCurrencyMap = {};
-  Map<int, double> _incomeByWeek = {};
-  Map<int, double> _expenseByWeek = {};
+  List<FlSpot> _incomeSpots = [];
+  List<FlSpot> _expenseSpots = [];
+  List<DateTime> _dailyViewDates = [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _initData();
+    _updateTransactions();
   }
 
-  Future<void> _initData() async {
-    final accounts = await DBService().getAccounts();
-    _accountCurrencyMap = {for (var a in accounts) a.id!: a.currency};
-
-    final dbCurrencies = await DBService().getCurrencies();
-    if (dbCurrencies.isNotEmpty) {
-      _selectedCurrency = dbCurrencies.first;
-      _currencies = dbCurrencies;
-      await _convertTransactions(_selectedCurrency!);
+  @override
+  void didUpdateWidget(covariant IncomeExpenseTrendGraph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.transactions != oldWidget.transactions) {
+      _updateTransactions();
     }
-
-    setState(() => _loading = false);
   }
 
-  Future<void> _convertTransactions(String targetCurrency) async {
+  Future<void> _updateTransactions() async {
     setState(() => _loading = true);
 
-    Map<int, double> incomeTotals = {};
-    Map<int, double> expenseTotals = {};
+    final accounts = context.read<AccountProvider>().accounts;
+    _accountCurrencyMap = {for (var a in accounts) a.id!: a.currency};
+    final currencies = _accountCurrencyMap.values.toSet().toList();
 
-    for (var tx in widget.transactions) {
-      final week = ((tx.date.day - 1) ~/ 7) + 1;
-      final accountCurrency = _accountCurrencyMap[tx.accountId] ?? 'PHP';
-      double amount = tx.amount;
-
-      if (accountCurrency != targetCurrency) {
-        final rate = await ForexService.getRate(
-          accountCurrency,
-          targetCurrency,
-        );
-        if (rate != null) amount *= rate;
+    if (currencies.isNotEmpty) {
+      if (_selectedCurrency == null ||
+          !currencies.contains(_selectedCurrency)) {
+        _selectedCurrency = currencies.first;
       }
+    } else {
+      _selectedCurrency = null;
+    }
 
-      if (tx.type == 'income') {
-        incomeTotals[week] = (incomeTotals[week] ?? 0) + amount;
-      } else if (tx.type == 'expense') {
-        expenseTotals[week] = (expenseTotals[week] ?? 0) + amount;
+    if (_selectedCurrency != null) {
+      final allUniqueDates =
+          widget.transactions
+              .map((tx) => DateTime(tx.date.year, tx.date.month, tx.date.day))
+              .toSet();
+
+      // Check for 2 or more unique days to display the graph
+      if (allUniqueDates.length >= 2) {
+        final Map<DateTime, double> dailyIncomeTotals = {};
+        final Map<DateTime, double> dailyExpenseTotals = {};
+
+        for (final tx in widget.transactions) {
+          final date = DateTime(tx.date.year, tx.date.month, tx.date.day);
+          final accountCurrency = _accountCurrencyMap[tx.accountId] ?? 'PHP';
+          double amount = tx.amount;
+          if (accountCurrency != _selectedCurrency) {
+            final rate = await ForexService.getRate(
+              accountCurrency,
+              _selectedCurrency!,
+            );
+            if (rate != null) amount *= rate;
+          }
+
+          if (tx.type == 'income') {
+            dailyIncomeTotals[date] = (dailyIncomeTotals[date] ?? 0) + amount;
+          } else if (tx.type == 'expense') {
+            dailyExpenseTotals[date] = (dailyExpenseTotals[date] ?? 0) + amount;
+          }
+        }
+
+        _dailyViewDates =
+            allUniqueDates.toList()..sort((a, b) => a.compareTo(b));
+        if (_dailyViewDates.length > 10) {
+          _dailyViewDates = _dailyViewDates.sublist(
+            _dailyViewDates.length - 10,
+          );
+        }
+
+        _incomeSpots = List.generate(_dailyViewDates.length, (i) {
+          final date = _dailyViewDates[i];
+          return FlSpot(i.toDouble(), dailyIncomeTotals[date] ?? 0);
+        });
+
+        _expenseSpots = List.generate(_dailyViewDates.length, (i) {
+          final date = _dailyViewDates[i];
+          return FlSpot(i.toDouble(), dailyExpenseTotals[date] ?? 0);
+        });
+      } else {
+        // If less than 2 days, clear all graph data to not display anything
+        _dailyViewDates = [];
+        _incomeSpots = [];
+        _expenseSpots = [];
       }
     }
 
     setState(() {
-      _incomeByWeek = incomeTotals;
-      _expenseByWeek = expenseTotals;
       _loading = false;
     });
   }
 
-  List<FlSpot> getIncomeSpots() {
-    final weeks =
-        {..._incomeByWeek.keys, ..._expenseByWeek.keys}.toList()..sort();
-    return weeks
-        .map((w) => FlSpot(w.toDouble(), _incomeByWeek[w] ?? 0))
-        .toList();
-  }
-
-  List<FlSpot> getExpenseSpots() {
-    final weeks =
-        {..._incomeByWeek.keys, ..._expenseByWeek.keys}.toList()..sort();
-    return weeks
-        .map((w) => FlSpot(w.toDouble(), _expenseByWeek[w] ?? 0))
-        .toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final incomeSpots = getIncomeSpots();
-    final expenseSpots = getExpenseSpots();
+    final accounts = context.watch<AccountProvider>().accounts;
+    final profile = context.watch<ProfileProvider>().profile;
+    final currencies = accounts.map((a) => a.currency).toSet().toList();
+    final showDropdown = currencies.length > 1;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
 
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title + Currency Dropdown
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Income vs Expense",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                if (_currencies.length > 1)
-                  DropdownButton<String>(
-                    value: _selectedCurrency,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      setState(() => _selectedCurrency = value);
-                      await _convertTransactions(value);
-                    },
-                    items:
-                        _currencies
-                            .map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)),
-                            )
-                            .toList(),
+    // Check if there are at least two days of data to display the graph
+    if (_dailyViewDates.length < 2) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title and Currency Dropdown
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Income vs Expense",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              if (showDropdown)
+                DropdownButton<String>(
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Chart
-            _loading
-                ? const Center(child: CircularProgressIndicator())
-                : SizedBox(
-                  height: 250,
-                  child: LineChart(
-                    LineChartData(
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: incomeSpots,
-                          isCurved: true,
-                          color: Colors.green,
-                          barWidth: 2,
-                          dotData: FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: Colors.green.withAlpha(25),
-                          ),
-                        ),
-                        LineChartBarData(
-                          spots: expenseSpots,
-                          isCurved: true,
-                          color: Colors.red,
-                          barWidth: 2,
-                          dotData: FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: Colors.red.withAlpha(25),
-                          ),
-                        ),
-                      ],
-                      titlesData: FlTitlesData(
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 30,
-                            interval: 1,
-                            getTitlesWidget:
-                                (value, meta) => Text(
-                                  'W${value.toInt()}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            getTitlesWidget:
-                                (value, meta) => Text(
-                                  formatNumber(
-                                    value,
-                                    currency: _selectedCurrency ?? 'PHP',
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                          ),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
+                  value: _selectedCurrency,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    setState(() => _selectedCurrency = value);
+                    await _updateTransactions();
+                  },
+                  items:
+                      currencies
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Chart
+          _loading
+              ? Center(child: CircularProgressIndicator(color: baseColor))
+              : SizedBox(
+                height: 250,
+                child: LineChart(
+                  LineChartData(
+                    minX: 0,
+                    maxX: (_dailyViewDates.length - 1).toDouble(),
+                    lineBarsData: [
+                      LineChartBarData(
+                        preventCurveOverShooting: true,
+                        spots: _incomeSpots,
+                        isCurved: true,
+                        color: Colors.green,
+                        barWidth: 2,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.green.withAlpha(25),
                         ),
                       ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine:
-                            (value) => FlLine(
-                              color: Colors.grey.withAlpha(40),
-                              strokeWidth: 1,
-                            ),
+                      LineChartBarData(
+                        preventCurveOverShooting: true,
+                        spots: _expenseSpots,
+                        isCurved: true,
+                        color: Colors.red,
+                        barWidth: 2,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.red.withAlpha(25),
+                        ),
                       ),
-                      borderData: FlBorderData(show: false),
-                      lineTouchData: LineTouchData(
-                        enabled: true,
-                        touchTooltipData: LineTouchTooltipData(
-                          tooltipPadding: const EdgeInsets.all(8),
-                          tooltipBorderRadius: BorderRadius.circular(8),
-                          getTooltipItems: (spots) {
-                            return spots.map((t) {
-                              final type =
-                                  t.barIndex == 0 ? "Income" : "Expense";
-                              final value = formatNumber(
-                                t.y,
-                                currency: _selectedCurrency ?? 'PHP',
-                              );
-                              return LineTooltipItem(
-                                "$type\n$value",
-                                const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                    ],
+                    titlesData: FlTitlesData(
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 32,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index >= 0 && index < _dailyViewDates.length) {
+                              final date = _dailyViewDates[index];
+                              final formattedDate = DateFormat(
+                                'MM/dd',
+                              ).format(date);
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: SideTitleWidget(
+                                  meta: meta,
+                                  angle: -45,
+                                  child: Text(
+                                    formattedDate,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ),
                               );
-                            }).toList();
+                            }
+                            return Container();
                           },
                         ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 50,
+                          getTitlesWidget:
+                              (value, meta) => Text(
+                                formatNumber(
+                                  value,
+                                  currency: _selectedCurrency ?? 'PHP',
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine:
+                          (value) => FlLine(
+                            color: Colors.grey.withAlpha(40),
+                            strokeWidth: 1,
+                          ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        tooltipPadding: const EdgeInsets.all(8),
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        getTooltipItems:
+                            (spots) =>
+                                spots.map((t) {
+                                  final type =
+                                      t.barIndex == 0 ? "Income" : "Expense";
+                                  final value = formatNumber(
+                                    t.y,
+                                    currency: _selectedCurrency ?? 'PHP',
+                                  );
+                                  return LineTooltipItem(
+                                    "$type\n$value",
+                                    const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                }).toList(),
                       ),
                     ),
                   ),
                 ),
-
-            const SizedBox(height: 24),
-            // Legend
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildLegend("Income", Colors.green),
-                _buildLegend("Expense", Colors.red),
-              ],
-            ),
-          ],
-        ),
+              ),
+          const SizedBox(height: 24),
+          // Legend
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildLegend("Income", Colors.green),
+              _buildLegend("Expense", Colors.red),
+            ],
+          ),
+        ],
       ),
     );
   }

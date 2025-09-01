@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
-import 'package:mywallet/utils/add_modal.dart';
-import 'package:mywallet/widgets/Account_Balance/add_account_modal.dart';
-import 'package:mywallet/utils/confirmation_dialog.dart';
+import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
+import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
+import 'package:mywallet/widgets/Account_Balance/account_form.dart';
 import 'package:provider/provider.dart';
 
 class ManageAccountsScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
   Future<void> _editAccount(Account account) async {
     await showDraggableModal(
       context: context,
-      child: AddAccountForm(existingAccount: account),
+      child: AccountForm(existingAccount: account),
     );
 
     if (!mounted) return;
@@ -46,50 +46,100 @@ class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
     final accounts = provider.accounts;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Manage Accounts")),
+      appBar: AppBar(
+        title: const Text("Manage Accounts"),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0.0,
+        elevation: 0.0,
+        titleSpacing: 0,
+      ),
       body:
           accounts.isEmpty
               ? const Center(child: Text("No accounts found"))
               : ListView.builder(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 itemCount: accounts.length,
                 itemBuilder: (context, index) {
                   final account = accounts[index];
                   return Card(
-                    color: account.color,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    margin: const EdgeInsets.only(bottom: 16),
                     child: ListTile(
-                      leading: Icon(
-                        categoryIcons[account.category],
-                        color: Colors.black54,
-                        size: 32,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: account.color.withValues(alpha: 0.2),
+                        child: Icon(
+                          categoryIcons[account.category],
+                          color: account.color,
+                          size: 24,
+                        ),
                       ),
                       title: Text(
                         account.name,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
                         ),
                       ),
                       subtitle: Text(
                         "${account.currency} ${account.balance.toStringAsFixed(2)}",
-                        style: const TextStyle(color: Colors.white70),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.white),
-                            onPressed: () => _editAccount(account),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteAccount(account),
-                          ),
-                        ],
+                      trailing: GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
+                            ),
+                            builder: (_) {
+                              return Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      title: const Text("Edit"),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _editAccount(account);
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      title: const Text("Delete"),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _deleteAccount(account);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: const Icon(Icons.more_vert),
                       ),
                     ),
                   );

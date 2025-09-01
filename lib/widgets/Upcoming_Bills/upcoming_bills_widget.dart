@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
+import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
-import 'package:mywallet/utils/add_modal.dart';
-import 'package:mywallet/utils/layout_pref.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/add_bill_modal.dart';
+import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
+import 'package:mywallet/services/layout_pref.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/manage_bills.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_list_view.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_empty.dart';
-import 'package:mywallet/utils/add_manage.dart';
-import 'package:mywallet/widgets/Add_Transaction/add_transaction_button.dart';
+import 'package:mywallet/utils/WidgetHelper/add_manage.dart';
 
 class UpcomingBillsWidget extends StatefulWidget {
   const UpcomingBillsWidget({super.key});
@@ -38,10 +38,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
   }
 
   void _handleAddBill() {
-    showDraggableModal(
-      context: context,
-      child: AddBillForm(existingBill: null),
-    );
+    showDraggableModal(context: context, child: BillForm(existingBill: null));
   }
 
   Future<void> _handleManageBills() async {
@@ -57,10 +54,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
   }
 
   void _handlePayBill() {
-    showDraggableModal(
-      context: context,
-      child: const AddTransactionForm(initialTabIndex: 1),
-    );
+    showAddTransactionModal(context, "bills");
   }
 
   bool isPaidThisMonth(Bill bill) {
@@ -80,7 +74,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
         }
 
         return Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

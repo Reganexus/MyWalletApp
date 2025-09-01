@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
-import 'package:mywallet/utils/formatters.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 
 class AccountCard extends StatelessWidget {
   final Account account;

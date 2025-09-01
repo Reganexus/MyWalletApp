@@ -16,14 +16,22 @@ class CurrencyFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     if (currencies.length <= 1) return const SizedBox.shrink();
 
-    return DropdownButton<String>(
-      value: selectedCurrency,
-      items:
-          [
-            "All",
-            ...currencies,
-          ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-      onChanged: onChanged,
+    return SizedBox(
+      height: 30,
+      child: DropdownButton<String>(
+        value: selectedCurrency,
+        isDense: true,
+        style: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
+        items:
+            [
+              "All",
+              ...currencies,
+            ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+        onChanged: onChanged,
+      ),
     );
   }
 }
