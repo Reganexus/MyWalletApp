@@ -32,18 +32,26 @@ class BillProvider extends ChangeNotifier {
     await loadBills();
   }
 
-  Future<void> deleteBill(String id) async {
+  Future<void> deleteBill(int id) async {
+    // Also update this to take an int
     await db.deleteBill(id);
     await loadBills();
   }
 
-  Future<void> markBillPaid(String billId) async {
-    final bill = _bills.firstWhere((b) => b.id == billId);
-    final updatedBill = bill.copyWith(
-      status: BillStatus.paid,
-      datePaid: DateTime.now(),
-    );
-    await db.updateBill(updatedBill);
-    await loadBills();
+  // Updated method to pay a bill
+  Future<void> payBill(int billId) async {
+    // Changed parameter type from String to int
+    try {
+      final billToUpdate = _bills.firstWhere((bill) => bill.id == billId);
+      final updatedBill = billToUpdate.copyWith(
+        status: BillStatus.paid,
+        datePaid: DateTime.now(),
+      );
+      await db.updateBill(updatedBill);
+      await loadBills();
+    } catch (e) {
+      print("❌ Failed to pay bill: $e");
+      rethrow;
+    }
   }
 }

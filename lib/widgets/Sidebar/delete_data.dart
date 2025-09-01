@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
 import 'package:mywallet/services/db_service.dart';
+import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 
 class DeleteAllData extends StatefulWidget {
   const DeleteAllData({super.key});
@@ -10,50 +11,48 @@ class DeleteAllData extends StatefulWidget {
 }
 
 class _DeleteAllDataState extends State<DeleteAllData> {
-  Future<void> _deleteAll() async {
-    // Clear DB
-    final db = DBService();
-    await db.clearAllData();
+  bool _isProcessing = false;
 
+  Future<void> _showSnackBar(String message, {Color? color}) async {
     if (!mounted) return;
-
-    // Reload providers
-    await ProviderReloader.reloadAll(context);
-
-    if (!mounted) return;
-
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/dashboard', (route) => false);
-
-    // ✅ Safe: only call messenger after async + mounted check
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text("✅ All data deleted")));
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
+  Future<void> _deleteAll() async {
+    setState(() => _isProcessing = true);
+    try {
+      final db = DBService();
+      await db.clearAllData();
+
+      if (!mounted) return;
+      await ProviderReloader.reloadAll(context);
+      if (!mounted) return;
+
+      await _showSnackBar("✅ All data deleted", color: Colors.green);
+
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/dashboard', (route) => false);
+    } catch (e) {
+      await _showSnackBar("Deletion failed: $e", color: Colors.red);
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showConfirmationDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text("Are you absolutely sure?"),
-            content: const Text(
-              "This will wipe out everything from the database.\n\n"
-              "Do you want to continue?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text("Delete All"),
-              ),
-            ],
-          ),
+      title: "Are you absolutely sure?",
+      content:
+          "This will wipe out everything from the database.\n\n"
+          "This action cannot be undone.",
+      confirmText: "Delete All",
+      cancelText: "Cancel",
+      confirmColor: Colors.red,
     );
 
     if (confirmed == true) {
@@ -61,51 +60,87 @@ class _DeleteAllDataState extends State<DeleteAllData> {
     }
   }
 
+  Widget _buildWarningCard() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.red,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.white,
+              size: 36,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                "This will permanently delete all accounts, bills, and transactions. This action cannot be undone.",
+                style: TextStyle(fontSize: 14, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteCard() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: _isProcessing ? null : _confirmDelete,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.red.withValues(alpha: 0.2),
+                child: const Icon(Icons.delete_forever, color: Colors.red),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text(
+                  "Delete All Data",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              if (_isProcessing)
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.red,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Delete All Data"),
-        backgroundColor: Colors.red.shade700,
+        centerTitle: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0.0,
+        elevation: 0.0,
+        titleSpacing: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "⚠️ Warning",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              "This will permanently delete all accounts, bills, and transactions.\n\n"
-              "This action cannot be undone.",
-              style: TextStyle(fontSize: 16),
-            ),
-            const Spacer(),
-            Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.delete_forever, color: Colors.white),
-                label: const Text("Delete All Data"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 24,
-                  ),
-                ),
-                onPressed: _confirmDelete,
-              ),
-            ),
-            const SizedBox(height: 40),
-          ],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        children: [_buildWarningCard(), _buildDeleteCard()],
       ),
     );
   }

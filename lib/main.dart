@@ -5,8 +5,12 @@ import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/providers/theme_provider.dart';
 import 'package:mywallet/providers/transaction_provider.dart';
+import 'package:mywallet/screens/Getting_Started/change_pin_starter.dart';
+import 'package:mywallet/screens/Getting_Started/edit_profile_starter.dart';
+import 'package:mywallet/screens/Getting_Started/get_started.dart';
 import 'package:mywallet/screens/dashboard_screen.dart';
 import 'package:mywallet/screens/pin_screen.dart';
+import 'package:mywallet/widgets/Sidebar/edit_profile_screen.dart';
 import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
 import 'package:mywallet/widgets/Sidebar/delete_data.dart';
 import 'package:provider/provider.dart';
@@ -28,15 +32,15 @@ void main() async {
       providers: [
         ChangeNotifierProvider(
           lazy: false,
-          create: (_) => AccountProvider(db: dbService),
+          create: (_) => AccountProvider(db: dbService)..loadAccounts(),
         ),
         ChangeNotifierProvider(
           lazy: false,
-          create: (_) => BillProvider(db: dbService),
+          create: (_) => BillProvider(db: dbService)..loadBills(),
         ),
         ChangeNotifierProxyProvider<AccountProvider, TransactionProvider>(
           lazy: false,
-          create: (_) => TransactionProvider(db: dbService),
+          create: (_) => TransactionProvider(db: dbService)..loadTransactions(),
           update: (_, accountProvider, txProvider) {
             txProvider!.accountProvider = accountProvider;
             return txProvider;
@@ -48,16 +52,14 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MyApp(
-        initialMode: savedPin == null ? PinMode.set : PinMode.unlock,
-      ),
+      child: MyApp(hasPin: savedPin != null),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final PinMode initialMode;
-  const MyApp({super.key, required this.initialMode});
+  final bool hasPin;
+  const MyApp({super.key, required this.hasPin});
 
   @override
   Widget build(BuildContext context) {
@@ -80,12 +82,20 @@ class MyApp extends StatelessWidget {
               displayColor: Colors.white,
             ),
           ),
-
           themeMode: themeProvider.themeMode,
-          initialRoute: '/pin',
+          initialRoute: hasPin ? '/pin' : '/get-started',
           routes: {
-            '/pin': (context) => PinScreen(mode: initialMode),
+            '/get-started': (context) => const GetStartedScreen(),
+            '/edit-profile-starter':
+                (context) => const EditProfileStarterScreen(),
+            '/change-pin-starter': (context) => const ChangePinStarterScreen(),
+            '/pin':
+                (context) =>
+                    const PinScreen(mode: PinMode.unlock, hasPin: true),
+            '/set-pin':
+                (context) => const PinScreen(mode: PinMode.set, hasPin: false),
             '/dashboard': (context) => const DashboardScreen(),
+            '/edit-profile': (context) => const EditProfileScreen(),
             '/delete': (context) => const DeleteAllData(),
             '/backup': (context) => const BackupScreen(),
           },

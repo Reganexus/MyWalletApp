@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mywallet/models/bill.dart';
-import 'package:mywallet/utils/formatters.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 
 class BillCard extends StatelessWidget {
   final Bill bill;

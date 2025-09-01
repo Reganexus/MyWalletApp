@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/bill_provider.dart';
-import 'package:mywallet/providers/transaction_provider.dart';
+import 'package:mywallet/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dashboard_screen.dart';
 
 enum PinMode { unlock, set, change }
 
 class PinScreen extends StatefulWidget {
   final PinMode mode;
+  final bool hasPin;
 
-  const PinScreen({super.key, required this.mode});
+  const PinScreen({super.key, required this.mode, required this.hasPin});
 
   @override
   State<PinScreen> createState() => _PinScreenState();
@@ -39,14 +39,9 @@ class _PinScreenState extends State<PinScreen> {
         listen: false,
       );
       final billProvider = Provider.of<BillProvider>(context, listen: false);
-      final txProvider = Provider.of<TransactionProvider>(
-        context,
-        listen: false,
-      );
 
       await accountProvider.loadAccounts();
       await billProvider.loadBills();
-      await txProvider.loadTransactions();
     });
   }
 
@@ -106,6 +101,7 @@ class _PinScreenState extends State<PinScreen> {
     if (_isConfirmingPin) {
       if (_enteredPin == _tempPin) {
         await _savePin(_enteredPin);
+        _showSuccess("PIN set successfully!");
         _goToDashboard();
       } else {
         _showError("PINs do not match. Try again.");
@@ -128,7 +124,20 @@ class _PinScreenState extends State<PinScreen> {
         _showError("Incorrect old PIN");
       }
     } else {
-      _handleSetPin();
+      if (_isConfirmingPin) {
+        if (_enteredPin == _tempPin) {
+          await _savePin(_enteredPin);
+          _showSuccess("PIN changed successfully!");
+          _goToDashboard();
+        } else {
+          _showError("PINs do not match. Try again.");
+        }
+      } else {
+        _tempPin = _enteredPin;
+        _enteredPin = "";
+        _isConfirmingPin = true;
+        setState(() {});
+      }
     }
   }
 
@@ -136,19 +145,25 @@ class _PinScreenState extends State<PinScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     setState(() {
       _enteredPin = "";
-      _isConfirmingPin = false;
-      _tempPin = null;
     });
   }
 
-  void _goToDashboard() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
     );
   }
 
+  void _goToDashboard() {
+    Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+  }
+
   Widget _buildPinDots() {
+    final profile = context.watch<ProfileProvider>().profile;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(4, (index) {
@@ -159,7 +174,10 @@ class _PinScreenState extends State<PinScreen> {
           height: 20,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: filled ? Colors.blueGrey : Colors.grey[300],
+            color:
+                filled
+                    ? baseColor
+                    : Theme.of(context).colorScheme.surface.withAlpha(100),
           ),
         );
       }),
@@ -176,17 +194,20 @@ class _PinScreenState extends State<PinScreen> {
         height: 70,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.blueGrey[100],
+          color:
+              icon == null
+                  ? Theme.of(context).colorScheme.surface.withAlpha(40)
+                  : Colors.transparent,
         ),
         child:
             icon != null
-                ? Icon(icon, size: 28, color: Colors.blueGrey[900])
+                ? Icon(icon, size: 32, color: Colors.white)
                 : Text(
                   text,
-                  style: TextStyle(
-                    fontSize: 24,
+                  style: const TextStyle(
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blueGrey[900],
+                    color: Colors.white,
                   ),
                 ),
       ),
@@ -195,6 +216,12 @@ class _PinScreenState extends State<PinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileProvider>().profile;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
+
     String title = "";
     if (widget.mode == PinMode.unlock) {
       title = "Enter PIN";
@@ -208,54 +235,74 @@ class _PinScreenState extends State<PinScreen> {
       }
     }
 
+    // CORRECTED: Simplified logic for the leading icon
+    final bool showBackButton = widget.mode == PinMode.change;
+
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading:
+            showBackButton
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+                : null,
+        title: Text(
+          widget.mode == PinMode.change ? "Change PIN" : "",
+          style: const TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [baseColor.withAlpha(230), baseColor.withAlpha(153)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              _buildPinDots(),
-              const SizedBox(height: 40),
+                const SizedBox(height: 24),
+                _buildPinDots(),
+                const SizedBox(height: 40),
 
-              // Keypad
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                mainAxisSpacing: 15,
-                crossAxisSpacing: 15,
-                padding: const EdgeInsets.symmetric(horizontal: 60),
-                children: [
-                  for (var i = 1; i <= 9; i++) _buildKeypadButton(i.toString()),
-                  const SizedBox(),
-                  _buildKeypadButton("0"),
-                  _buildKeypadButton("back", icon: Icons.backspace),
-                ],
-              ),
-
-              if (_isConfirmingPin) ...[
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isConfirmingPin = false;
-                      _enteredPin = "";
-                      _tempPin = null;
-                    });
-                  },
-                  child: const Text("Go back"),
+                // Keypad
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  children: [
+                    for (var i = 1; i <= 9; i++)
+                      _buildKeypadButton(i.toString()),
+                    const SizedBox(),
+                    _buildKeypadButton("0"),
+                    _buildKeypadButton("back", icon: Icons.backspace),
+                  ],
                 ),
               ],
-            ],
+            ),
           ),
         ),
       ),

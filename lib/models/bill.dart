@@ -1,10 +1,12 @@
+// mywallet/models/bill.dart
+
 import 'package:flutter/material.dart';
-import 'package:mywallet/utils/color_utils.dart';
+import 'package:mywallet/utils/Design/color_utils.dart';
 
 enum BillStatus { paid, pending }
 
 class Bill {
-  final String? id;
+  final int? id; // Changed from String? to int?
   final String name;
   final double amount;
   final String currency;
@@ -26,7 +28,7 @@ class Bill {
 
   Map<String, dynamic> toMap() {
     return {
-      if (id != null) 'id': id!,
+      'id': id, // The database will handle this if it's null
       'name': name,
       'amount': amount,
       'currency': currency,
@@ -39,7 +41,7 @@ class Bill {
 
   factory Bill.fromMap(Map<String, dynamic> map) {
     return Bill(
-      id: map['id'] as String?,
+      id: map['id'] as int?, // Changed to read as an int?
       name: map['name'] as String,
       amount: (map['amount'] as num).toDouble(),
       currency: map['currency'] as String? ?? "PHP",
@@ -57,7 +59,7 @@ class Bill {
   Color get color => ColorUtils.fromHex(colorHex);
 
   Bill copyWith({
-    String? id,
+    int? id,
     String? name,
     double? amount,
     String? currency,

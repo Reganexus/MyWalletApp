@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/services/forex_service.dart';
-import 'package:mywallet/utils/formatters.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:provider/provider.dart';
 
 class TotalBalanceWidget extends StatefulWidget {
@@ -19,34 +19,66 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
   Widget build(BuildContext context) {
     final accounts = context.watch<AccountProvider>().accounts;
     final profile = context.watch<ProfileProvider>().profile;
-
-    if (accounts.isEmpty) {
-      return const Card(
-        margin: EdgeInsets.all(16),
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text("No accounts available."),
-        ),
-      );
-    }
-
-    // User preferred color (fallback if not set)
     final baseColor =
         profile?.colorPreference != null
             ? Color(int.parse(profile!.colorPreference!))
             : Colors.blue;
 
-    // Group balances by currency
+    if (accounts.isEmpty) {
+      return Container(
+        margin: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              baseColor.withValues(alpha: 0.9),
+              baseColor.withValues(alpha: 0.6),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: baseColor.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "No accounts available",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                "Add an account first in the 'Accounts' section",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final Map<String, double> grouped = {};
     for (final account in accounts) {
       grouped[account.currency] =
           (grouped[account.currency] ?? 0) + account.balance;
     }
 
-    // Default to first currency
     _selectedCurrency ??= grouped.keys.first;
 
-    // Convert total to selected currency
     Future<double> convertTotal() async {
       double total = 0;
       for (var entry in grouped.entries) {
@@ -71,9 +103,7 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
         gradient: LinearGradient(
           colors: [
             baseColor.withValues(alpha: 0.9),
-            baseColor.withValues(alpha: 0.7),
-            baseColor.withValues(alpha: 0.5),
-            baseColor.withValues(alpha: 0.3),
+            baseColor.withValues(alpha: 0.6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -157,16 +187,7 @@ class _TotalBalanceWidgetState extends State<TotalBalanceWidget> {
                 );
               },
             ),
-            const SizedBox(height: 16),
-            ...grouped.entries.map(
-              (entry) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  "${entry.key}: ${formatFullBalance(entry.value, currency: entry.key)}",
-                  style: const TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-              ),
-            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),

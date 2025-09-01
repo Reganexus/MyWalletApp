@@ -79,4 +79,28 @@ class ForexService {
     // ✅ Fallback to stale cache if available
     return staleRate;
   }
+
+  static Future<List<String>> getCachedCurrencies() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString(_cacheKey);
+
+    if (cachedData == null) return [];
+
+    try {
+      final Map<String, dynamic> cache = json.decode(cachedData);
+
+      // Get all keys from the cache (bases) and all target currencies
+      final Set<String> currencies = {};
+
+      for (final base in cache.keys) {
+        currencies.add(base); // base currency
+        final rates = cache[base] as Map<String, dynamic>;
+        currencies.addAll(rates.keys); // target currencies
+      }
+
+      return currencies.toList()..sort();
+    } catch (_) {
+      return [];
+    }
+  }
 }

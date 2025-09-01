@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/providers/profile_provider.dart';
+import 'package:provider/provider.dart';
 
 class EmptyBillsState extends StatelessWidget {
   final VoidCallback onAdd;
@@ -6,22 +8,88 @@ class EmptyBillsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileProvider>().profile;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 50),
-          const Text(
-            "No upcoming bills",
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-            textAlign: TextAlign.center,
+          // Illustration Circle
+          Container(
+            decoration: BoxDecoration(
+              color: baseColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Icon(
+              Icons.receipt_long_outlined,
+              size: 48,
+              color: baseColor,
+            ),
           ),
-          const SizedBox(height: 20),
-          TextButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text("Add Bill"),
+          const SizedBox(height: 24),
+
+          // Title
+          Text(
+            "No upcoming bills",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Subtitle
+          Text(
+            "You have no bills scheduled. Add one to stay on top of your payments.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Add Bill Button
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                "Add Bill",
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: baseColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                shadowColor: baseColor.withValues(alpha: 0.3),
+              ),
+            ),
           ),
         ],
       ),
