@@ -13,9 +13,12 @@ import 'package:mywallet/screens/pin_screen.dart';
 import 'package:mywallet/widgets/Sidebar/edit_profile_screen.dart';
 import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
 import 'package:mywallet/widgets/Sidebar/delete_data.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'services/db_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +29,14 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final savedPin = prefs.getString("app_pin");
+
+  // Initialize notification service
+  await NotificationService.init();
+
+  // Request Android 13+ notification permission
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
 
   runApp(
     MultiProvider(

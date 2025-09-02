@@ -5,6 +5,7 @@ import 'package:mywallet/models/profile.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/Design/form_decoration.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -80,26 +81,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             colorPreference: _selectedColor.toARGB32().toString(),
           );
 
-      await provider.updateProfile(profile); // assuming async update
+      await provider.updateProfile(profile); // async update
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Profile updated successfully!"),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/change-pin-starter',
-        (route) => false,
-      );
+
+      OverlayMessage.show(context, message: "Profile updated successfully!");
+
+      if (!widget.hasPin) {
+        // No PIN set, go to change-pin-starter
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/change-pin-starter',
+          (route) => false,
+        );
+      } else {
+        // PIN already set, just close the screen
+        Navigator.pop(context);
+      }
     } catch (e) {
       debugPrint("Failed to save profile: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to save profile: $e")));
-      }
+
+      if (!mounted) return;
+
+      OverlayMessage.show(
+        context,
+        message: "Failed to save profile: $e",
+        isError: true,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -107,12 +115,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.watch<ProfileProvider>().profile;
-    final baseColor =
-        profile?.colorPreference != null
-            ? Color(int.parse(profile!.colorPreference!))
-            : Colors.blue;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Edit Profile"),
@@ -134,7 +136,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   radius: 70,
                   backgroundImage:
                       _avatarBytes != null ? MemoryImage(_avatarBytes!) : null,
-                  backgroundColor: baseColor.withAlpha(230),
+                  backgroundColor: _selectedColor,
                   child:
                       _avatarBytes == null
                           ? Icon(
@@ -170,11 +172,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               focusNode: _usernameFocusNode,
               decoration: buildInputDecoration(
                 "Username",
-                color: baseColor,
+                color: _selectedColor,
                 isFocused: _usernameFocusNode.hasFocus,
                 prefixIcon: const Icon(Icons.person),
                 context: context,
               ),
+              maxLength: 15,
             ),
             const SizedBox(height: 24),
             // Color picker
@@ -212,7 +215,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: FilledButton(
                 onPressed: _isLoading ? null : _saveProfile,
                 style: FilledButton.styleFrom(
-                  backgroundColor: baseColor,
+                  backgroundColor: _selectedColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

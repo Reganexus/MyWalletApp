@@ -30,7 +30,6 @@ class DBService {
     await db.delete('accounts');
     await db.delete('bills');
     await db.delete('transactions');
-    await db.delete('profile');
   }
 
   Future<Database> _initDB(String fileName) async {

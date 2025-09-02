@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
 import 'package:mywallet/services/db_service.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 
 class DeleteAllData extends StatefulWidget {
@@ -13,31 +14,30 @@ class DeleteAllData extends StatefulWidget {
 class _DeleteAllDataState extends State<DeleteAllData> {
   bool _isProcessing = false;
 
-  Future<void> _showSnackBar(String message, {Color? color}) async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
-  }
-
   Future<void> _deleteAll() async {
     setState(() => _isProcessing = true);
+
     try {
       final db = DBService();
       await db.clearAllData();
 
       if (!mounted) return;
       await ProviderReloader.reloadAll(context);
-      if (!mounted) return;
 
-      await _showSnackBar("✅ All data deleted", color: Colors.green);
+      if (!mounted) return;
+      OverlayMessage.show(context, message: "All data deleted");
 
       if (!mounted) return;
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil('/dashboard', (route) => false);
     } catch (e) {
-      await _showSnackBar("Deletion failed: $e", color: Colors.red);
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "Deletion failed: $e",
+        isError: true,
+      );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

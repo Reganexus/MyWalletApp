@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
@@ -77,6 +78,12 @@ class _AccountFormState extends State<AccountForm> {
   }
 
   Future<void> _addAccount() async {
+    final profile =
+        Provider.of<ProfileProvider>(context, listen: false).profile;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -109,7 +116,7 @@ class _AccountFormState extends State<AccountForm> {
         content:
             "Do you want to save changes to ${widget.existingAccount!.name}?",
         confirmText: "Update",
-        confirmColor: Theme.of(context).colorScheme.primary,
+        confirmColor: baseColor,
       );
 
       if (confirm != true) {
@@ -118,8 +125,18 @@ class _AccountFormState extends State<AccountForm> {
       }
 
       await accountsProvider.updateAccount(newAccount);
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "${newAccount.name} updated successfully!",
+      );
     } else {
       await accountsProvider.addAccount(newAccount);
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "${newAccount.name} added successfully!",
+      );
     }
 
     if (!mounted) return;

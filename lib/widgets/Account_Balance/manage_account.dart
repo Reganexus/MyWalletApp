@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 import 'package:mywallet/widgets/Account_Balance/account_form.dart';
@@ -30,14 +31,33 @@ class _ManageAccountsScreenState extends State<ManageAccountsScreen> {
       context: context,
       title: "Delete Account",
       content: "Are you sure you want to delete ${account.name}?",
+      confirmText: "Delete",
+      confirmColor: Colors.red,
     );
 
     if (!mounted || confirm != true) return;
 
-    context.read<AccountProvider>().deleteAccount(account.id!);
+    try {
+      // Delete the account
+      await context.read<AccountProvider>().deleteAccount(account.id!);
 
-    if (!mounted) return;
-    await ProviderReloader.reloadAll(context);
+      if (!mounted) return;
+      await ProviderReloader.reloadAll(context);
+
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "${account.name} deleted successfully!",
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      OverlayMessage.show(
+        context,
+        message: "${account.name} failed to delete: $e",
+        isError: true,
+      );
+    }
   }
 
   @override

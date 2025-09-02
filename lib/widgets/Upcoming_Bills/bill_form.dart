@@ -1,7 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
@@ -33,6 +36,7 @@ class _BillFormState extends State<BillForm> {
   DateTime? _datePaid;
   Color _selectedColor = ColorUtils.availableColors.first;
   bool _isLoading = false;
+  bool get _isEditable => widget.existingBill == null;
   String _selectedCurrency = "PHP";
 
   @override
@@ -76,7 +80,6 @@ class _BillFormState extends State<BillForm> {
   }
 
   Future<void> _pickDate({required bool isDueDate}) async {
-    // ✅ use listen: false here
     final profile =
         Provider.of<ProfileProvider>(context, listen: false).profile;
     final theme = Theme.of(context);
@@ -85,14 +88,14 @@ class _BillFormState extends State<BillForm> {
             ? Color(int.parse(profile!.colorPreference!))
             : Colors.blue;
 
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: isDueDate ? _dueDate : (_datePaid ?? DateTime.now()),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate:
-          isDueDate
-              ? DateTime.now().add(const Duration(days: 365 * 5))
-              : DateTime.now(),
+      initialDate: isDueDate ? tomorrow : (_datePaid ?? now),
+      firstDate: isDueDate ? tomorrow : DateTime(now.year - 1),
+      lastDate: isDueDate ? DateTime(now.year + 5, now.month, now.day) : now,
       builder: (context, child) {
         return Theme(
           data: theme.copyWith(
@@ -129,6 +132,13 @@ class _BillFormState extends State<BillForm> {
   }
 
   Future<void> _submit() async {
+    final profile =
+        Provider.of<ProfileProvider>(context, listen: false).profile;
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -165,15 +175,18 @@ class _BillFormState extends State<BillForm> {
         title: "Update Bill",
         content: "Do you want to save changes to ${widget.existingBill!.name}?",
         confirmText: "Update",
-        confirmColor: Theme.of(context).colorScheme.primary,
+        confirmColor: baseColor,
       );
 
       if (confirm != true) {
         setState(() => _isLoading = false);
         return;
       }
+
+      // ⚠️ Skip scheduling & notifications for updates
       await billsProvider.updateBill(newBill);
     } else {
+      // Only schedule notifications when adding a new bill
       await billsProvider.addBill(newBill);
     }
 
@@ -218,6 +231,7 @@ class _BillFormState extends State<BillForm> {
             // Bill Name
             TextFormField(
               controller: _nameController,
+              enabled: _isEditable,
               focusNode: _nameFocus,
               decoration: buildInputDecoration(
                 "Bill Name",
@@ -238,6 +252,7 @@ class _BillFormState extends State<BillForm> {
             TextFormField(
               controller: _amountController,
               focusNode: _amountFocus,
+              enabled: _isEditable,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -278,9 +293,10 @@ class _BillFormState extends State<BillForm> {
                       child: Text(status.name.toUpperCase()),
                     );
                   }).toList(),
-              onChanged: (value) {
-                if (value != null) setState(() => _status = value);
-              },
+              onChanged:
+                  _isEditable
+                      ? (value) => setState(() => _status = value!)
+                      : null,
             ),
             const SizedBox(height: 12),
 
@@ -307,48 +323,101 @@ class _BillFormState extends State<BillForm> {
                 ),
                 // add more as needed
               ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    // update currency in new bill
-                    _selectedCurrency = value;
-                  });
-                }
-              },
+              onChanged:
+                  _isEditable
+                      ? (value) => setState(() => _selectedCurrency = value!)
+                      : null,
             ),
             const SizedBox(height: 12),
-
-            // Due Date
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                "Due Date: ${_dueDate.toLocal().toString().split(' ')[0]}",
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.calendar_today),
-                color: baseColor,
-                onPressed: () => _pickDate(isDueDate: true),
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Due Date Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Due Date",
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                widget.existingBill != null &&
+                                        widget.existingBill!.status ==
+                                            BillStatus.paid
+                                    ? "${formatFullDate(_dueDate)} (next month)"
+                                    : formatFullDate(_dueDate),
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_isEditable)
+                          IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            color: baseColor,
+                            onPressed: () => _pickDate(isDueDate: true),
+                          ),
+                      ],
+                    ),
+
+                    // Date Paid Row (if status is paid)
+                    if (_status == BillStatus.paid)
+                      Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Date Paid",
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    Text(
+                                      _datePaid == null
+                                          ? "Not selected"
+                                          : formatFullDate(_datePaid!),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_isEditable)
+                                IconButton(
+                                  icon: const Icon(Icons.calendar_today),
+                                  color: baseColor,
+                                  onPressed: () => _pickDate(isDueDate: false),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 12),
 
-            // Date Paid (if status is paid)
-            if (_status == BillStatus.paid) ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  _datePaid == null
-                      ? "Date Paid: Not selected"
-                      : "Date Paid: ${_datePaid!.toLocal().toString().split(' ')[0]}",
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  color: baseColor,
-                  onPressed: () => _pickDate(isDueDate: false),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+            const SizedBox(height: 12),
 
             // Color Picker
             Text(
@@ -361,8 +430,13 @@ class _BillFormState extends State<BillForm> {
             ColorPickerGrid(
               colors: ColorUtils.availableColors,
               selectedColor: _selectedColor,
-              onColorSelected:
-                  (color) => setState(() => _selectedColor = color),
+              onColorSelected: (color) {
+                if (widget.existingBill == null ||
+                    widget.existingBill!.status == BillStatus.paid ||
+                    widget.existingBill!.status != BillStatus.paid) {
+                  setState(() => _selectedColor = color);
+                }
+              },
             ),
 
             SizedBox(

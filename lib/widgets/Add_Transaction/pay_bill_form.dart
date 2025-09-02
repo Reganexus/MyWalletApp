@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/transaction.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/providers/bill_provider.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/account_provider.dart';
@@ -57,20 +58,21 @@ class _AddBillFormState extends State<AddBillForm> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedBill == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a bill to pay.")),
+      OverlayMessage.show(
+        context,
+        message: "Please select a bill to pay.",
+        isError: true,
       );
       return;
     }
 
-    // Changed to int? instead of String?
     final billId = _selectedBill!.id;
     if (billId == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error: The selected bill has no ID.")),
-        );
-      }
+      OverlayMessage.show(
+        context,
+        message: "Error: The selected bill has no ID.",
+        isError: true,
+      );
       return;
     }
 
@@ -91,21 +93,28 @@ class _AddBillFormState extends State<AddBillForm> {
     try {
       await txProvider.addTransaction(tx);
       await billProvider.payBill(billId);
+
+      if (!mounted) return;
+      await ProviderReloader.reloadAll(context);
+
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "${_selectedBill!.name} paid successfully!",
+      );
+
+      Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to process payment: $e")),
-        );
-      }
-      setState(() => _isLoading = false);
-      return;
+      if (!mounted) return;
+
+      OverlayMessage.show(
+        context,
+        message: "Failed to process payment: $e",
+        isError: true,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    if (!mounted) return;
-    await ProviderReloader.reloadAll(context);
-
-    if (!mounted) return;
-    Navigator.pop(context);
   }
 
   @override
@@ -144,25 +153,25 @@ class _AddBillFormState extends State<AddBillForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Bill Name Dropdown
-            DropdownButtonFormField<Bill>(
+            DropdownButtonFormField<int>(
               focusNode: _billFocus,
               isExpanded: true,
-              initialValue: _selectedBill,
+              initialValue: _selectedBill?.id, // use ID here
               items:
                   pendingBills.map((bill) {
                     return DropdownMenuItem(
-                      value: bill,
+                      value: bill.id,
                       child: Text(
                         "${bill.name} (${bill.currency} ${bill.amount})",
                       ),
                     );
                   }).toList(),
-              onChanged: (val) {
+              onChanged: (id) {
                 setState(() {
-                  _selectedBill = val;
-                  if (val != null) {
-                    _amountController.text = val.amount.toString();
-                    _selectedAccountId = null; // Reset account selection
+                  _selectedBill = pendingBills.firstWhere((b) => b.id == id);
+                  if (_selectedBill != null) {
+                    _amountController.text = _selectedBill!.amount.toString();
+                    _selectedAccountId = null; // reset account selection
                   }
                 });
               },

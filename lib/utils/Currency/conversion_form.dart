@@ -6,7 +6,7 @@ import 'package:mywallet/utils/Design/form_decoration.dart';
 import 'package:provider/provider.dart';
 
 class ConversionForm extends StatefulWidget {
-  final void Function(String from, String to, double rate) onConvert;
+  final void Function(String from, String to) onConvert;
 
   const ConversionForm({super.key, required this.onConvert});
 
@@ -43,7 +43,7 @@ class _ConversionFormState extends State<ConversionForm> {
 
     final rate = await ForexService.getRate(_fromCurrency, _toCurrency);
     if (rate != null) {
-      widget.onConvert(_fromCurrency, _toCurrency, rate);
+      widget.onConvert(_fromCurrency, _toCurrency);
     }
 
     setState(() => _loading = false);
@@ -51,7 +51,10 @@ class _ConversionFormState extends State<ConversionForm> {
 
   List<DropdownMenuItem<String>> _buildCurrencyDropdownItems() {
     return allCurrencies.map((currency) {
-      return DropdownMenuItem(value: currency.code, child: Text(currency.code));
+      return DropdownMenuItem(
+        value: currency.code,
+        child: Text("${currency.code} - ${currency.name}"),
+      );
     }).toList();
   }
 
