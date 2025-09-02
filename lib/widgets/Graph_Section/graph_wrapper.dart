@@ -18,10 +18,10 @@ class GraphsSectionWidget extends StatelessWidget {
 
     return Column(
       children: [
+        WeeklySpendingHeatmap(transactions: transactions),
         TopExpenseGraph(transactions: transactions),
         BalanceByCurrencyChart(accounts: accounts),
         IncomeExpenseTrendGraph(transactions: transactions),
-        WeeklySpendingHeatmap(transactions: transactions),
         AccountDistributionGraph(accounts: accounts),
       ],
     );

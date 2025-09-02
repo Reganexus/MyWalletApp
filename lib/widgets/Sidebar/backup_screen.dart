@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
 import 'package:mywallet/services/backup_service.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 
 class BackupScreen extends StatefulWidget {
@@ -13,56 +14,59 @@ class BackupScreen extends StatefulWidget {
 
 class _BackupScreenState extends State<BackupScreen> {
   final BackupService _backupService = BackupService();
-  bool _isProcessing = false;
-
-  Future<void> _showSnackBar(String message, {Color? color}) async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
-  }
+  bool _isBackingUp = false;
+  bool _isRestoring = false;
 
   Future<void> _backup() async {
-    setState(() => _isProcessing = true);
+    setState(() => _isBackingUp = true);
+
     try {
       final file = await _backupService.backupDatabase();
+
+      if (!mounted) return;
+
       if (file != null) {
-        await _showSnackBar(
-          "Backup saved at: ${file.path}",
-          color: Colors.green,
-        );
+        OverlayMessage.show(context, message: "Backup saved at: ${file.path}");
       } else {
-        await _showSnackBar("Backup canceled by user", color: Colors.orange);
+        OverlayMessage.show(
+          context,
+          message: "Backup canceled by user",
+          isError: true,
+        );
       }
     } catch (e) {
-      await _showSnackBar("Backup failed: $e", color: Colors.red);
+      if (!mounted) return;
+      OverlayMessage.show(context, message: "Backup failed: $e", isError: true);
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) setState(() => _isBackingUp = false);
     }
   }
 
   Future<void> _restore() async {
-    setState(() => _isProcessing = true);
+    setState(() => _isRestoring = true);
+
     try {
       await _backupService.restoreDatabase();
-      if (!mounted) return;
 
+      if (!mounted) return;
       await ProviderReloader.reloadAll(context);
-      if (!mounted) return;
 
-      await _showSnackBar(
-        "Restore complete, data refreshed",
-        color: Colors.green,
-      );
+      if (!mounted) return;
+      OverlayMessage.show(context, message: "Restore complete, data refreshed");
 
       if (!mounted) return;
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil('/dashboard', (route) => false);
     } catch (e) {
-      await _showSnackBar("Restore failed: $e", color: Colors.red);
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "Restore failed: $e",
+        isError: true,
+      );
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) setState(() => _isRestoring = false);
     }
   }
 
@@ -71,6 +75,7 @@ class _BackupScreenState extends State<BackupScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    required bool isLoading,
     Color? color,
   }) {
     final profile = context.watch<ProfileProvider>().profile;
@@ -78,13 +83,14 @@ class _BackupScreenState extends State<BackupScreen> {
         profile?.colorPreference != null
             ? Color(int.parse(profile!.colorPreference!))
             : Colors.blue;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: _isProcessing ? null : onTap,
+        onTap: isLoading ? null : onTap,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -114,7 +120,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   ],
                 ),
               ),
-              if (_isProcessing)
+              if (isLoading)
                 SizedBox(
                   width: 24,
                   height: 24,
@@ -146,6 +152,7 @@ class _BackupScreenState extends State<BackupScreen> {
             title: "Backup Database",
             subtitle: "Create a backup of all your data",
             onTap: _backup,
+            isLoading: _isBackingUp,
             color: Colors.blue,
           ),
           _buildActionCard(
@@ -153,6 +160,7 @@ class _BackupScreenState extends State<BackupScreen> {
             title: "Restore Database",
             subtitle: "Restore from your latest backup",
             onTap: _restore,
+            isLoading: _isRestoring,
             color: Colors.green,
           ),
         ],

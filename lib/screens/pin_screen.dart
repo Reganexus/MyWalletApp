@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -142,16 +143,14 @@ class _PinScreenState extends State<PinScreen> {
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    OverlayMessage.show(context, message: "Incorrect PIN", isError: true);
     setState(() {
       _enteredPin = "";
     });
   }
 
   void _showSuccess(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-    );
+    OverlayMessage.show(context, message: "PIN set successfully!");
   }
 
   void _goToDashboard() {
@@ -286,20 +285,23 @@ class _PinScreenState extends State<PinScreen> {
                 const SizedBox(height: 40),
 
                 // Keypad
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  children: [
-                    for (var i = 1; i <= 9; i++)
-                      _buildKeypadButton(i.toString()),
-                    const SizedBox(),
-                    _buildKeypadButton("0"),
-                    _buildKeypadButton("back", icon: Icons.backspace),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    children: [
+                      for (var i = 1; i <= 9; i++)
+                        _buildKeypadButton(i.toString()),
+                      const SizedBox(),
+                      _buildKeypadButton("0"),
+                      _buildKeypadButton("back", icon: Icons.backspace),
+                    ],
+                  ),
                 ),
               ],
             ),

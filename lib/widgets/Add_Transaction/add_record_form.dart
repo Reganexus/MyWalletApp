@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/transaction.dart';
 import 'package:mywallet/providers/account_provider.dart';
@@ -87,13 +88,27 @@ class _AddRecordFormState extends State<AddRecordForm> {
     );
 
     final txProvider = context.read<TransactionProvider>();
-    await txProvider.addTransaction(tx);
 
-    if (!mounted) return;
-    await ProviderReloader.reloadAll(context);
+    try {
+      await txProvider.addTransaction(tx);
+      if (!mounted) return;
+      await ProviderReloader.reloadAll(context);
 
-    if (!mounted) return;
-    Navigator.pop(context);
+      if (!mounted) return;
+      OverlayMessage.show(context, message: "Transaction added successfully!");
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+
+      OverlayMessage.show(
+        context,
+        message: "Failed to add transaction: $e",
+        isError: true,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override

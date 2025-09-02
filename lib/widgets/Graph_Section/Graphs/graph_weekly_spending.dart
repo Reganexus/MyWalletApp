@@ -252,7 +252,7 @@ class _WeeklySpendingHeatmapState extends State<WeeklySpendingHeatmap> {
                               } else {
                                 cellColor = Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withAlpha(50);
+                                ).colorScheme.onSurface.withAlpha(20);
                                 textColor =
                                     Theme.of(
                                       context,

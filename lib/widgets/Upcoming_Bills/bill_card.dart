@@ -23,7 +23,7 @@ class BillCard extends StatelessWidget {
     String statusText;
 
     if (isPaidThisMonth) {
-      subtitle = "Paid on ${formatter.format(bill.datePaid!)}";
+      subtitle = "Paid on ${formatFullDate(bill.datePaid!)}";
       statusText = "Paid";
     } else {
       subtitle = "Every ${formatDay(bill.dueDate.day)} day of the month";

@@ -15,7 +15,6 @@ class _LatestRatesScreenState extends State<LatestRatesScreen> {
   Map<String, double> _rates = {};
   String? _fromCurrency;
   String? _toCurrency;
-  double? _latestRate;
   bool _loading = true;
 
   @override
@@ -42,11 +41,10 @@ class _LatestRatesScreenState extends State<LatestRatesScreen> {
     });
   }
 
-  void _onConvert(String from, String to, double rate) {
+  void _onConvert(String from, String to) {
     setState(() {
       _fromCurrency = from;
       _toCurrency = to;
-      _latestRate = rate;
     });
     _loadRates();
   }
@@ -81,7 +79,6 @@ class _LatestRatesScreenState extends State<LatestRatesScreen> {
                     ConversionResult(
                       from: _fromCurrency ?? 'PHP',
                       to: _toCurrency ?? 'USD',
-                      rate: _latestRate,
                     ),
                     SizedBox(height: 24),
                     ConversionForm(onConvert: _onConvert),

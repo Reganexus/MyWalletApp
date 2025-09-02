@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
+import 'package:mywallet/widgets/Sidebar/empty_transactions.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/providers/transaction_provider.dart';
 import 'package:mywallet/providers/account_provider.dart';
@@ -158,11 +160,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
           Expanded(
             child:
                 filteredTx.isEmpty
-                    ? const Center(
-                      child: Text(
-                        "No transactions for this period.",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
+                    ? EmptyTransactionsState(
+                      onAdd: () => showAddTransactionModal(context, "records"),
                     )
                     : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 12),

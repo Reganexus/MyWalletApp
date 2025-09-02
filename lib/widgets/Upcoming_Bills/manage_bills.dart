@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/provider_reloader.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
+import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
@@ -37,11 +38,18 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
     try {
       context.read<BillProvider>().deleteBill(bill.id!);
       await ProviderReloader.reloadAll(context);
+
+      if (!mounted) return;
+      OverlayMessage.show(
+        context,
+        message: "${bill.name} deleted successfully!",
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
+      OverlayMessage.show(
         context,
-      ).showSnackBar(SnackBar(content: Text("Failed to delete bill: $e")));
+        message: "${bill.name} failed to delete: '$e'",
+      );
     }
   }
 
@@ -53,10 +61,8 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
   }
 
   Widget _buildBillCard(Bill bill) {
-    final dueDateStr = DateFormat.yMMMd().format(bill.dueDate);
-    final amountStr = NumberFormat.currency(
-      symbol: bill.currency,
-    ).format(bill.amount);
+    final dueDateStr = formatFullDate(bill.dueDate);
+    final amountStr = formatNumber(bill.amount, currency: bill.currency);
 
     return Card(
       elevation: 0,
@@ -69,9 +75,19 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
           bill.name,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
-        subtitle: Text(
-          "$amountStr - Due: $dueDateStr",
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              amountStr,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+            Text(
+              "Due: $dueDateStr",
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
         ),
         trailing: GestureDetector(
           onTap: () {

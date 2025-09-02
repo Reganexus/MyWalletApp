@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/services/db_service.dart';
+import 'package:mywallet/services/bill_scheduler.dart';
 
 class BillProvider extends ChangeNotifier {
   final DBService db;
@@ -14,8 +15,7 @@ class BillProvider extends ChangeNotifier {
 
   Future<void> loadBills() async {
     try {
-      final bills = await db.getBills();
-      _bills = bills;
+      _bills = await db.getBills();
     } catch (e) {
       print("❌ Failed to load bills: $e");
     }
@@ -25,30 +25,55 @@ class BillProvider extends ChangeNotifier {
   Future<void> addBill(Bill bill) async {
     await db.insertBill(bill);
     await loadBills();
+    await BillScheduler.handleBillScheduling(bill, action: 'add');
   }
 
   Future<void> updateBill(Bill bill) async {
     await db.updateBill(bill);
     await loadBills();
+    await BillScheduler.handleBillScheduling(bill, action: 'update');
   }
 
   Future<void> deleteBill(int id) async {
-    // Also update this to take an int
-    await db.deleteBill(id);
-    await loadBills();
+    try {
+      final billToDelete = _bills.firstWhere((bill) => bill.id == id);
+      await BillScheduler.cancelBillNotifications(billToDelete);
+      await db.deleteBill(id);
+      await loadBills();
+    } catch (e) {
+      print("❌ Failed to delete bill: $e");
+      rethrow;
+    }
   }
 
-  // Updated method to pay a bill
   Future<void> payBill(int billId) async {
-    // Changed parameter type from String to int
     try {
-      final billToUpdate = _bills.firstWhere((bill) => bill.id == billId);
-      final updatedBill = billToUpdate.copyWith(
-        status: BillStatus.paid,
-        datePaid: DateTime.now(),
+      final bill = _bills.firstWhere((b) => b.id == billId);
+      await BillScheduler.cancelBillNotifications(bill);
+
+      final updatedBill = bill.copyWith(
+        status: BillStatus.paid, // mark as paid
+        datePaid: DateTime.now(), // mark payment date
       );
+
+      // Update DB with paid status
       await db.updateBill(updatedBill);
-      await loadBills();
+      await loadBills(); // notifyListeners() called inside loadBills()
+
+      // Schedule next due date notifications
+      final nextDueDate = DateTime(
+        bill.dueDate.year,
+        bill.dueDate.month + 1,
+        bill.dueDate.day,
+      );
+
+      final nextBillCycle = updatedBill.copyWith(
+        status: BillStatus.pending,
+        dueDate: nextDueDate,
+        datePaid: null, // reset for next cycle
+      );
+
+      await BillScheduler.handleBillScheduling(nextBillCycle, action: 'pay');
     } catch (e) {
       print("❌ Failed to pay bill: $e");
       rethrow;
