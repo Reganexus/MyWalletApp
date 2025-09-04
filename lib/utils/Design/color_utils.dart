@@ -2,20 +2,29 @@
 import 'package:flutter/material.dart';
 
 class ColorUtils {
-  /// A curated list of background colors where white text is legible.
+  static const Color defaultColor = Color.fromARGB(255, 38, 71, 82);
+  static const Color mainColor1 = Color.fromARGB(255, 42, 156, 142);
+  static const Color mainColor2 = Color.fromARGB(255, 230, 111, 80);
+  static const Color mainColor3 = Color.fromARGB(255, 245, 163, 97);
+  static const Color mainColor4 = Color.fromARGB(255, 233, 197, 107);
+
   static const List<Color> availableColors = [
-    Colors.blue,
-    Colors.red,
+    defaultColor,
     Colors.green,
-    Colors.orange,
-    Colors.purple,
-    Colors.teal,
-    Colors.brown,
-    Colors.pink,
-    Colors.indigo,
-    Colors.deepOrange,
+    mainColor1,
     Colors.cyan,
+    Colors.blue,
+    Colors.indigo,
     Colors.deepPurple,
+    Colors.purple,
+    Colors.pink,
+    Colors.red,
+    Colors.deepOrange,
+    mainColor2,
+    mainColor3,
+    mainColor4,
+    Colors.orange,
+    Colors.brown,
   ];
 
   /// Ensures text contrast is accessible (white or black depending on bg).

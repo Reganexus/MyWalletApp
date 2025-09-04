@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/services/currencies.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
@@ -201,6 +202,7 @@ class _AccountFormState extends State<AccountForm> {
 
             // 2. Currency
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _selectedCurrency,
               focusNode: _currencyFocusNode,
               decoration: buildInputDecoration(
@@ -211,10 +213,13 @@ class _AccountFormState extends State<AccountForm> {
                 context: context,
               ),
               items:
-                  Account.availableCurrencies.map((currency) {
+                  allCurrencies.map((currency) {
                     return DropdownMenuItem(
-                      value: currency["code"],
-                      child: Text(currency["label"]!),
+                      value: currency.code,
+                      child: Text(
+                        '${currency.code} - ${currency.name}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
               onChanged: (value) {
@@ -223,6 +228,7 @@ class _AccountFormState extends State<AccountForm> {
                 }
               },
             ),
+
             const SizedBox(height: 12),
 
             // 3. Initial Value

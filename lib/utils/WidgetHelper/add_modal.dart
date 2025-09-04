@@ -13,7 +13,7 @@ Future<void> showDraggableModal({
     builder: (BuildContext modalContext) {
       return DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.85,
+        initialChildSize: 0.9,
         minChildSize: 0.5,
         maxChildSize: 1.0,
         builder: (_, scrollController) {

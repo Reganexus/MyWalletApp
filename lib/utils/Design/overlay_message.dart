@@ -71,7 +71,7 @@ class _FullScreenOverlayState extends State<_FullScreenOverlay>
     return FadeTransition(
       opacity: _opacityAnimation,
       child: Material(
-        color: Colors.black45,
+        color: Colors.black.withValues(alpha: 0.8),
         child: Center(
           child: ScaleTransition(
             scale: _scaleAnimation,

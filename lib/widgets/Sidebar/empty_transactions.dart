@@ -15,7 +15,7 @@ class EmptyTransactionsState extends StatelessWidget {
             : Colors.blue;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -75,16 +75,17 @@ class EmptyTransactionsState extends StatelessWidget {
               label: const Text(
                 "Add Transaction",
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: baseColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                backgroundColor: baseColor,
                 shadowColor: baseColor.withValues(alpha: 0.3),
               ),
             ),
