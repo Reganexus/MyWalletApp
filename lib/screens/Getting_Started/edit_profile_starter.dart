@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/widgets/Sidebar/edit_profile_screen.dart';
 
 class EditProfileStarterScreen extends StatelessWidget {
@@ -6,49 +7,80 @@ class EditProfileStarterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        backgroundColor: Colors.white,
+      ),
+      body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Spacer(flex: 2),
-            const Icon(Icons.person_outline, size: 100, color: Colors.grey),
-            const SizedBox(height: 24),
+
+            // App Logo with shadow
+            Image.asset('lib/assets/images/sparkling.png', height: 200),
+
+            const SizedBox(height: 32),
+
+            // Title
             Text(
               "Personalize Your Experience",
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium!.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            Text(
-              "Set a username, profile picture, and a theme color to make the app feel like yours.",
-              style: Theme.of(context).textTheme.bodyLarge,
-              textAlign: TextAlign.center,
+
+            const SizedBox(height: 16),
+
+            // Subtitle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                "Set a username, profile picture, and a theme color "
+                "to make the app feel like yours.",
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            const Spacer(flex: 2),
-            FilledButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const EditProfileScreen(hasPin: false),
+
+            const Spacer(flex: 3),
+
+            // Edit Profile button at bottom
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 24.0,
+              ),
+              child: FilledButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(hasPin: false),
+                    ),
+                  );
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: ColorUtils.defaultColor,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                );
-              },
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  "Edit Profile",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
-              child: const Text("Edit Profile"),
             ),
-            const Spacer(),
           ],
         ),
       ),

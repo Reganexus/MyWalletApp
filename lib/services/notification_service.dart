@@ -12,8 +12,9 @@ class NotificationService {
   /// Initialize the notification plugin
   static Future<void> init() async {
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@mipmap/launcher_icon',
     );
+
     const iosSettings = DarwinInitializationSettings();
 
     const initializationSettings = InitializationSettings(
@@ -60,6 +61,7 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
+      icon: '@mipmap/launcher_icon',
     );
 
     const iosDetails = DarwinNotificationDetails(

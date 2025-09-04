@@ -38,24 +38,6 @@ class Account {
     this.colorHex = "#4285F4",
   });
 
-  static const List<Map<String, String>> availableCurrencies = [
-    {"code": "PHP", "label": "PHP - Philippine Peso"},
-    {"code": "USD", "label": "USD - US Dollar"},
-    {"code": "EUR", "label": "EUR - Euro"},
-    {"code": "JPY", "label": "JPY - Japanese Yen"},
-    {"code": "AUD", "label": "AUD - Australian Dollar"},
-    {"code": "KRW", "label": "KRW - South Korean Won"},
-    {"code": "CNY", "label": "CNY - Chinese Yuan"},
-    {"code": "GBP", "label": "GBP - British Pound"},
-    {"code": "CAD", "label": "CAD - Canadian Dollar"},
-    {"code": "SGD", "label": "SGD - Singapore Dollar"},
-    {"code": "HKD", "label": "HKD - Hong Kong Dollar"},
-    {"code": "INR", "label": "INR - Indian Rupee"},
-    {"code": "THB", "label": "THB - Thai Baht"},
-    {"code": "IDR", "label": "IDR - Indonesian Rupiah"},
-    {"code": "MYR", "label": "MYR - Malaysian Ringgit"},
-  ];
-
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id!,

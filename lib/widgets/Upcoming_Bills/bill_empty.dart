@@ -48,9 +48,7 @@ class EmptyBillsState extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -63,7 +61,7 @@ class EmptyBillsState extends StatelessWidget {
               fontSize: 14,
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 32),
@@ -77,16 +75,17 @@ class EmptyBillsState extends StatelessWidget {
               label: const Text(
                 "Add Bill",
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: baseColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                backgroundColor: baseColor,
                 shadowColor: baseColor.withValues(alpha: 0.3),
               ),
             ),

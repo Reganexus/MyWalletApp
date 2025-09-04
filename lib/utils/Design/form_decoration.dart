@@ -10,7 +10,6 @@ InputDecoration buildInputDecoration(
   final theme = Theme.of(context);
   final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
   final unfocusedBorderColor = theme.dividerColor;
-  final fillColor = theme.inputDecorationTheme.fillColor ?? theme.cardColor;
 
   return InputDecoration(
     labelText: label,
@@ -23,8 +22,6 @@ InputDecoration buildInputDecoration(
               child: prefixIcon,
             )
             : null,
-    filled: true,
-    fillColor: fillColor,
     labelStyle: TextStyle(color: textColor),
     floatingLabelStyle: TextStyle(color: isFocused ? color : textColor),
     border: OutlineInputBorder(

@@ -72,16 +72,17 @@ class EmptyAccountsState extends StatelessWidget {
               label: const Text(
                 "Add Account",
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: baseColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                backgroundColor: baseColor,
                 shadowColor: baseColor.withValues(alpha: 0.3),
               ),
             ),
