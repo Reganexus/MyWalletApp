@@ -26,7 +26,7 @@ class BillListView extends StatelessWidget {
         itemCount: bills.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.4,
+          childAspectRatio: 1.3,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -35,7 +35,7 @@ class BillListView extends StatelessWidget {
             bill: bills[i],
             isPaidThisMonth: isPaidThisMonth(bills[i]),
             formatter: formatter,
-            compact: true, // 👈 force compact in grid
+            compact: true,
           );
         },
       );

@@ -81,7 +81,7 @@ class AccountCard extends StatelessWidget {
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     formatBalance(account.currency, account.balance),
                     style: const TextStyle(

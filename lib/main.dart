@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mywallet/providers/account_provider.dart';
-import 'package:mywallet/providers/bill_provider.dart';
-import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/providers/multiprovider.dart';
 import 'package:mywallet/providers/theme_provider.dart';
-import 'package:mywallet/providers/transaction_provider.dart';
 import 'package:mywallet/screens/Getting_Started/change_pin_starter.dart';
 import 'package:mywallet/screens/Getting_Started/edit_profile_starter.dart';
 import 'package:mywallet/screens/Getting_Started/get_started.dart';
@@ -30,42 +27,13 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final savedPin = prefs.getString("app_pin");
 
-  // Initialize notification service
   await NotificationService.init();
 
-  // Request Android 13+ notification permission
   if (await Permission.notification.isDenied) {
     await Permission.notification.request();
   }
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          lazy: false,
-          create: (_) => AccountProvider(db: dbService)..loadAccounts(),
-        ),
-        ChangeNotifierProvider(
-          lazy: false,
-          create: (_) => BillProvider(db: dbService)..loadBills(),
-        ),
-        ChangeNotifierProxyProvider<AccountProvider, TransactionProvider>(
-          lazy: false,
-          create: (_) => TransactionProvider(db: dbService)..loadTransactions(),
-          update: (_, accountProvider, txProvider) {
-            txProvider!.accountProvider = accountProvider;
-            return txProvider;
-          },
-        ),
-        ChangeNotifierProvider(
-          lazy: false,
-          create: (_) => ProfileProvider(db: dbService)..loadProfile(),
-        ),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: MyApp(hasPin: savedPin != null),
-    ),
-  );
+  runApp(buildAppProviders(MyApp(hasPin: savedPin != null), dbService));
 }
 
 class MyApp extends StatelessWidget {

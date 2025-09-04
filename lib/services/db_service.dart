@@ -1,3 +1,4 @@
+import 'package:mywallet/models/goal.dart';
 import 'package:mywallet/models/profile.dart';
 import 'package:mywallet/models/transaction.dart';
 import 'package:sqflite/sqflite.dart';
@@ -92,6 +93,21 @@ class DBService {
       date TEXT NOT NULL,
       note TEXT,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+    )
+  ''');
+
+    await db.execute('''
+    CREATE TABLE goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      targetAmount REAL NOT NULL,
+      savedAmount REAL NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL,
+      deadline TEXT,
+      customDeadline TEXT,
+      colorHex TEXT NOT NULL,
+      dateCreated TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
     )
   ''');
   }
@@ -195,6 +211,46 @@ class DBService {
       where: 'id = ?',
       whereArgs: [tx.id],
     );
+  }
+
+  // ------------------ Goals ------------------
+
+  Future<Goal> insertGoal(Goal goal) async {
+    final db = await database;
+
+    final now = DateTime.now();
+    final goalToInsert = goal.copyWith(dateCreated: now, updatedAt: now);
+
+    final id = await db.insert('goals', goalToInsert.toMap());
+    return goalToInsert.copyWith(id: id);
+  }
+
+  Future<int> updateGoal(Goal goal) async {
+    if (goal.id == null) {
+      throw Exception("Cannot update a goal without an ID");
+    }
+
+    final db = await database;
+    final updatedGoal = goal.copyWith(updatedAt: DateTime.now());
+
+    return await db.update(
+      'goals',
+      updatedGoal.toMap(),
+      where: 'id = ?',
+      whereArgs: [goal.id!],
+    );
+  }
+
+  Future<int> deleteGoal(int id) async {
+    final db = await database;
+    return await db.delete('goals', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Goal>> getGoals() async {
+    final db = await database;
+    final maps = await db.query('goals');
+
+    return List.generate(maps.length, (i) => Goal.fromMap(maps[i]));
   }
 
   Future<List<String>> getCurrencies() async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/widgets/Add_Transaction/add_contribution_form.dart';
 import 'package:mywallet/widgets/Add_Transaction/pay_bill_form.dart';
 import 'package:mywallet/widgets/Add_Transaction/add_record_form.dart';
 import 'package:provider/provider.dart';
@@ -42,6 +43,8 @@ class _AccountBillsSwitcherState extends State<AccountBillsSwitcher> {
               _buildPillButton("Add Record", "records", baseColor),
               const SizedBox(width: 8),
               _buildPillButton("Pay Bills", "bills", baseColor),
+              const SizedBox(width: 8),
+              _buildPillButton("Contribute", "contribute", baseColor),
             ],
           ),
         ),
@@ -49,6 +52,7 @@ class _AccountBillsSwitcherState extends State<AccountBillsSwitcher> {
         // --- Content Switcher ---
         if (selectedSection == "records") const AddRecordForm(),
         if (selectedSection == "bills") const AddBillForm(),
+        if (selectedSection == "contribute") const AddContribution(),
       ],
     );
   }

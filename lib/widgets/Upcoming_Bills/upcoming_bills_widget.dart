@@ -82,7 +82,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
                 spacing: 0,
                 children: [
                   const Text(
-                    "Bills",
+                    "Monthly Bills",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),

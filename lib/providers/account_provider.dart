@@ -54,6 +54,26 @@ class AccountProvider extends ChangeNotifier {
     await loadAccounts();
   }
 
+  Future<void> deductFromAccount(int accountId, double amount) async {
+    try {
+      final account = _accounts.firstWhere((acc) => acc.id == accountId);
+
+      if (account.balance < amount) {
+        throw Exception("Insufficient funds in ${account.name}");
+      }
+
+      final updatedAccount = account.copyWith(
+        balance: account.balance - amount,
+      );
+
+      await db.updateAccount(updatedAccount);
+      await loadAccounts();
+    } catch (e) {
+      print("❌ Failed to deduct from account: $e");
+      rethrow;
+    }
+  }
+
   List<String> get availableCurrencies {
     return accounts.map((acc) => acc.currency).toSet().toList();
   }
