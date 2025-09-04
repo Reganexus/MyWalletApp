@@ -4,12 +4,14 @@ class AccountActions extends StatelessWidget {
   final VoidCallback onAdd;
   final VoidCallback onManage;
   final VoidCallback? onPay;
+  final VoidCallback? onContribute; // 👈 new
 
   const AccountActions({
     super.key,
     required this.onAdd,
     required this.onManage,
     this.onPay,
+    this.onContribute,
   });
 
   @override
@@ -53,12 +55,24 @@ class AccountActions extends StatelessWidget {
                   ],
                 ),
               ),
+            if (onContribute != null)
+              const PopupMenuItem<int>(
+                value: 3,
+                child: Row(
+                  children: [
+                    Icon(Icons.savings_outlined),
+                    SizedBox(width: 8),
+                    Text("Contribute"),
+                  ],
+                ),
+              ),
           ],
         );
 
         if (value == 0) onAdd();
         if (value == 1) onManage();
         if (value == 2 && onPay != null) onPay!();
+        if (value == 3 && onContribute != null) onContribute!();
       },
       child: const Icon(Icons.more_vert, size: 24),
     );

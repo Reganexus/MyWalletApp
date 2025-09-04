@@ -6,6 +6,7 @@ import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/Design/form_decoration.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
+import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -213,27 +214,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children:
-                          ColorUtils.availableColors.map((color) {
-                            return GestureDetector(
-                              onTap:
-                                  () => setState(() => _selectedColor = color),
-                              child: CircleAvatar(
-                                backgroundColor: color,
-                                radius: 20,
-                                child:
-                                    _selectedColor == color
-                                        ? const Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                        )
-                                        : null,
-                              ),
-                            );
-                          }).toList(),
+                    ColorPickerGrid(
+                      colors: ColorUtils.availableColors,
+                      selectedColor: _selectedColor,
+                      onColorSelected:
+                          (color) => setState(() => _selectedColor = color),
                     ),
                   ],
                 ),

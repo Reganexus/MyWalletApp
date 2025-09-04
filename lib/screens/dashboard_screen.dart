@@ -3,6 +3,7 @@ import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/screens/latest_rates.dart';
 import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
+import 'package:mywallet/widgets/Goal/set_goal_widget.dart';
 import 'package:mywallet/widgets/Total_Balance/total_balance.dart';
 import 'package:provider/provider.dart';
 import '../widgets/Account_Balance/account_balance_widget.dart';
@@ -103,12 +104,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _buildPillButton("Accounts", "accounts"),
                   _buildPillButton("Bills", "bills"),
+                  _buildPillButton("Goals", "goals"),
                 ],
               ),
             ),
 
             if (selectedSection == "accounts") const AccountBalanceWidget(),
             if (selectedSection == "bills") const UpcomingBillsWidget(),
+            if (selectedSection == "goals") const GoalsWidget(),
 
             const GraphsSectionWidget(),
           ],

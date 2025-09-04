@@ -21,7 +21,7 @@ class AccountListView extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         crossAxisCount: 2,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
         children:

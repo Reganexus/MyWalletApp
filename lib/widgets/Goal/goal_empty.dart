@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 
-class EmptyBillsState extends StatelessWidget {
+class EmptyGoalsState extends StatelessWidget {
   final VoidCallback onAdd;
-  const EmptyBillsState({super.key, required this.onAdd});
+  const EmptyGoalsState({super.key, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,6 @@ class EmptyBillsState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Illustration Circle
           Container(
             decoration: BoxDecoration(
               color: baseColor.withValues(alpha: 0.1),
@@ -33,17 +32,12 @@ class EmptyBillsState extends StatelessWidget {
               ],
             ),
             padding: const EdgeInsets.all(24),
-            child: Icon(
-              Icons.receipt_long_outlined,
-              size: 48,
-              color: baseColor,
-            ),
+            child: Icon(Icons.flag_outlined, size: 48, color: baseColor),
           ),
           const SizedBox(height: 24),
 
-          // Title
           Text(
-            "No monthly bills",
+            "No goals yet",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18,
@@ -52,10 +46,8 @@ class EmptyBillsState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Subtitle
           Text(
-            "You have no monthly bills scheduled. Add one to stay on top of your payments.",
+            "Set your first savings goal to start tracking your progress.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -66,14 +58,13 @@ class EmptyBillsState extends StatelessWidget {
           ),
           const SizedBox(height: 32),
 
-          // Add Bill Button
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: onAdd,
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text(
-                "Add Monthly Bill",
+                "Add Goal",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

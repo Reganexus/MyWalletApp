@@ -11,7 +11,7 @@ class ColorPickerGrid extends StatelessWidget {
     required this.colors,
     required this.selectedColor,
     required this.onColorSelected,
-    this.crossAxisCount = 6,
+    this.crossAxisCount = 8,
   });
 
   @override

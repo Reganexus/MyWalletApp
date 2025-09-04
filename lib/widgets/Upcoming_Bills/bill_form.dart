@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/services/currencies.dart';
 import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 import 'package:mywallet/utils/Design/form_decoration.dart';
+import 'package:mywallet/widgets/Upcoming_Bills/bill_disclaimer.dart';
 import 'package:provider/provider.dart';
 
 class BillForm extends StatefulWidget {
@@ -28,6 +30,7 @@ class _BillFormState extends State<BillForm> {
   // Focus tracking
   final _nameFocus = FocusNode();
   final _amountFocus = FocusNode();
+  final _currencyFocusNode = FocusNode();
   final _statusFocus = FocusNode();
   String? _focusedField;
 
@@ -66,6 +69,7 @@ class _BillFormState extends State<BillForm> {
 
     attachListener(_nameFocus, "name");
     attachListener(_amountFocus, "amount");
+    attachListener(_currencyFocusNode, "currency");
     attachListener(_statusFocus, "status");
   }
 
@@ -75,6 +79,7 @@ class _BillFormState extends State<BillForm> {
     _amountController.dispose();
     _nameFocus.dispose();
     _amountFocus.dispose();
+    _currencyFocusNode.dispose();
     _statusFocus.dispose();
     super.dispose();
   }
@@ -220,12 +225,17 @@ class _BillFormState extends State<BillForm> {
           children: [
             Center(
               child: Text(
-                widget.existingBill != null ? "Update Bill" : "Add Bill",
+                widget.existingBill != null
+                    ? "Update Monthly Bill"
+                    : "Add Monthly Bill",
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+
+            BillDisclaimer(),
             const SizedBox(height: 20),
 
             // Bill Name
@@ -300,9 +310,10 @@ class _BillFormState extends State<BillForm> {
             ),
             const SizedBox(height: 12),
 
-            // Currency
             DropdownButtonFormField<String>(
-              initialValue: widget.existingBill?.currency ?? "PHP",
+              isExpanded: true,
+              initialValue: _selectedCurrency,
+              focusNode: _currencyFocusNode,
               decoration: buildInputDecoration(
                 "Currency",
                 prefixIcon: const Icon(Icons.currency_exchange),
@@ -310,24 +321,22 @@ class _BillFormState extends State<BillForm> {
                 isFocused: _focusedField == "currency",
                 context: context,
               ),
-              items: const [
-                DropdownMenuItem(
-                  value: "PHP",
-                  child: Text("PHP - Philippine Peso"),
-                ),
-                DropdownMenuItem(value: "USD", child: Text("USD - US Dollar")),
-                DropdownMenuItem(value: "EUR", child: Text("EUR - Euro")),
-                DropdownMenuItem(
-                  value: "JPY",
-                  child: Text("JPY - Japanese Yen"),
-                ),
-                // add more as needed
-              ],
+              items:
+                  allCurrencies.map((currency) {
+                    return DropdownMenuItem(
+                      value: currency.code,
+                      child: Text(
+                        '${currency.code} - ${currency.name}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
               onChanged:
                   _isEditable
                       ? (value) => setState(() => _selectedCurrency = value!)
                       : null,
             ),
+
             const SizedBox(height: 12),
             Card(
               elevation: 0,
@@ -455,8 +464,8 @@ class _BillFormState extends State<BillForm> {
                         ? CircularProgressIndicator(color: baseColor)
                         : Text(
                           widget.existingBill != null
-                              ? "Update Bill"
-                              : "Add Bill",
+                              ? "Update Monthly Bill"
+                              : "Add Monthly Bill",
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
