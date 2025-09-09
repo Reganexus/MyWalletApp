@@ -31,6 +31,7 @@ class DBService {
     await db.delete('accounts');
     await db.delete('bills');
     await db.delete('transactions');
+    await db.delete('goals');
   }
 
   Future<Database> _initDB(String fileName) async {
@@ -107,7 +108,8 @@ class DBService {
       customDeadline TEXT,
       colorHex TEXT NOT NULL,
       dateCreated TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
+      updatedAt TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active'
     )
   ''');
   }

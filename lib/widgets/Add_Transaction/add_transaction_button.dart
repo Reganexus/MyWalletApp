@@ -41,9 +41,7 @@ class _AccountBillsSwitcherState extends State<AccountBillsSwitcher> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildPillButton("Add Record", "records", baseColor),
-              const SizedBox(width: 8),
               _buildPillButton("Pay Bills", "bills", baseColor),
-              const SizedBox(width: 8),
               _buildPillButton("Contribute", "contribute", baseColor),
             ],
           ),

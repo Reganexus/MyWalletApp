@@ -1,4 +1,3 @@
-// Disclaimer
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
@@ -10,11 +9,15 @@ class BillDisclaimer extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile =
         Provider.of<ProfileProvider>(context, listen: false).profile;
-    final theme = ThemeData();
+    final theme = Theme.of(context);
+
     final baseColor =
         profile?.colorPreference != null
             ? Color(int.parse(profile!.colorPreference!))
-            : Colors.blue;
+            : theme.colorScheme.primary;
+
+    final textColor =
+        theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
 
     return Card(
       elevation: 0,
@@ -30,9 +33,7 @@ class BillDisclaimer extends StatelessWidget {
               child: Text(
                 "Note: Adding a bill here only applies to monthly bills. "
                 "Other recurrence options (daily, weekly, yearly) are not yet supported.",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.surface,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
               ),
             ),
           ],

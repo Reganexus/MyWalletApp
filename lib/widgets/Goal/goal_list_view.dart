@@ -15,7 +15,7 @@ class GoalListView extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         crossAxisCount: 2,
-        childAspectRatio: 1.3,
+        childAspectRatio: 1.2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
         children:

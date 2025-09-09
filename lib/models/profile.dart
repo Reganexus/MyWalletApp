@@ -22,7 +22,7 @@ class Profile {
     return Profile(
       id: id ?? this.id,
       username: username ?? this.username,
-      profileImage: profileImage ?? this.profileImage,
+      profileImage: profileImage,
       colorPreference: colorPreference ?? this.colorPreference,
     );
   }

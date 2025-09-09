@@ -54,9 +54,22 @@ class AccountProvider extends ChangeNotifier {
     await loadAccounts();
   }
 
+  /// ✅ New helper
+  Account? getAccountById(int accountId) {
+    try {
+      return _accounts.firstWhere((acc) => acc.id == accountId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> deductFromAccount(int accountId, double amount) async {
     try {
-      final account = _accounts.firstWhere((acc) => acc.id == accountId);
+      final account = getAccountById(accountId);
+
+      if (account == null) {
+        throw Exception("Account not found");
+      }
 
       if (account.balance < amount) {
         throw Exception("Insufficient funds in ${account.name}");
