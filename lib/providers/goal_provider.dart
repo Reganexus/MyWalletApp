@@ -57,24 +57,17 @@ class GoalProvider extends ChangeNotifier {
     try {
       final goal = _goals.firstWhere((g) => g.id == goalId);
 
-      // Update goal progress
+      final newSaved = goal.savedAmount + amount;
+      final isCompleted = newSaved >= goal.targetAmount;
+
       final updatedGoal = goal.copyWith(
-        savedAmount: goal.savedAmount + amount,
+        savedAmount: newSaved.clamp(0, goal.targetAmount),
+        status: isCompleted ? GoalStatus.completed : GoalStatus.active,
         updatedAt: DateTime.now(),
       );
 
       await db.updateGoal(updatedGoal);
-      await loadGoals(); // will call notifyListeners()
-
-      // Optionally, check if goal is completed
-      if (updatedGoal.savedAmount >= updatedGoal.targetAmount) {
-        final completedGoal = updatedGoal.copyWith(
-          savedAmount: updatedGoal.targetAmount,
-          updatedAt: DateTime.now(),
-        );
-        await db.updateGoal(completedGoal);
-        await loadGoals();
-      }
+      await loadGoals();
     } catch (e) {
       print("❌ Failed to contribute to goal: $e");
       rethrow;

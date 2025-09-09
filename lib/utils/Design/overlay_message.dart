@@ -71,45 +71,31 @@ class _FullScreenOverlayState extends State<_FullScreenOverlay>
     return FadeTransition(
       opacity: _opacityAnimation,
       child: Material(
-        color: Colors.black.withValues(alpha: 0.8),
+        color: Colors.black.withValues(alpha: 0.9),
         child: Center(
           child: ScaleTransition(
             scale: _scaleAnimation,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 56),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 20,
-                    offset: Offset(0, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  widget.isError
+                      ? Icons.error_outline
+                      : Icons.check_circle_outline,
+                  color: widget.isError ? Colors.redAccent : Colors.green,
+                  size: 150,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  widget.message,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    widget.isError
-                        ? Icons.error_outline
-                        : Icons.check_circle_outline,
-                    color: widget.isError ? Colors.redAccent : Colors.green,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.message,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
         ),

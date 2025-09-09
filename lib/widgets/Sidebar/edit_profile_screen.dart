@@ -7,6 +7,7 @@ import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/Design/form_decoration.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
+import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -186,6 +187,74 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ],
                     ),
+
+                    if (_avatarBytes != null) ...[
+                      const SizedBox(height: 24),
+                      GestureDetector(
+                        onTap: () async {
+                          final confirmed = await showConfirmationDialog(
+                            context: context,
+                            title: "Delete Profile Picture",
+                            content:
+                                "Are you sure you want to remove your profile picture?",
+                            confirmText: "Delete",
+                            confirmColor: Colors.red,
+                          );
+
+                          if (confirmed == true) {
+                            try {
+                              if (!context.mounted) return;
+                              final provider = context.read<ProfileProvider>();
+                              final profile = provider.profile;
+
+                              if (profile != null) {
+                                final updatedProfile = profile.copyWith(
+                                  profileImage: null,
+                                );
+                                await provider.updateProfile(updatedProfile);
+                              }
+
+                              if (!context.mounted) return;
+                              setState(() => _avatarBytes = null);
+
+                              OverlayMessage.show(
+                                context,
+                                message: "Profile picture deleted",
+                              );
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              OverlayMessage.show(
+                                context,
+                                message: "Failed to delete profile picture: $e",
+                                isError: true,
+                              );
+                            }
+                          } else if (confirmed == false) {
+                            if (!context.mounted) return;
+                            OverlayMessage.show(
+                              context,
+                              message: "Deletion cancelled",
+                              isError: true,
+                            );
+                          }
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 6),
+                            Text(
+                              "Delete Profile Picture",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
+import 'package:mywallet/utils/WidgetHelper/status_dropdown.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/bill.dart';
@@ -23,6 +24,8 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
   final formatter = DateFormat("yyyy-MM-dd");
   bool _isGrid = false;
   late final _layoutPref = const LayoutPreference("upcoming_bills_isGrid");
+
+  BillStatus? _selectedStatus; // null = show all
 
   @override
   void initState() {
@@ -73,19 +76,36 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
           return EmptyBillsState(onAdd: _handleAddBill);
         }
 
+        // check available statuses
+        final hasPaid = bills.any((b) => b.status == BillStatus.paid);
+        final hasPending = bills.any((b) => b.status == BillStatus.pending);
+
+        // filter based on selected dropdown value
+        final filteredBills =
+            (_selectedStatus == null)
+                ? bills
+                : bills.where((b) => b.status == _selectedStatus).toList();
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Row(
-                spacing: 0,
                 children: [
                   const Text(
                     "Monthly Bills",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
+                  if (hasPaid && hasPending)
+                    BillStatusFilter(
+                      selectedStatus: _selectedStatus,
+                      onChanged: (val) {
+                        setState(() => _selectedStatus = val);
+                      },
+                    ),
+                  const SizedBox(width: 12),
                   GestureDetector(
                     onTap: _toggleLayout,
                     child: Icon(
@@ -103,7 +123,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
               ),
               const SizedBox(height: 12),
               BillListView(
-                bills: bills,
+                bills: filteredBills,
                 isGrid: _isGrid,
                 formatter: formatter,
                 isPaidThisMonth: isPaidThisMonth,

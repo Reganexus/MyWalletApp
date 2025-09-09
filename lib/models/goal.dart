@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 
+enum GoalStatus { active, completed }
+
 class Goal {
   final int? id;
   final String name;
@@ -12,6 +14,7 @@ class Goal {
   final String colorHex;
   final DateTime dateCreated;
   final DateTime updatedAt;
+  final GoalStatus status;
 
   Goal({
     this.id,
@@ -24,9 +27,9 @@ class Goal {
     this.colorHex = "#4285F4",
     required this.dateCreated,
     required this.updatedAt,
+    this.status = GoalStatus.active,
   });
 
-  /// Convert model → Map for SQLite
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id!,
@@ -39,10 +42,10 @@ class Goal {
       'colorHex': colorHex,
       'dateCreated': dateCreated.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'status': status.name,
     };
   }
 
-  /// Convert SQLite Map → model
   factory Goal.fromMap(Map<String, dynamic> map) {
     return Goal(
       id: map['id'] as int?,
@@ -56,16 +59,17 @@ class Goal {
       colorHex: map['colorHex'] as String? ?? "#4285F4",
       dateCreated: DateTime.parse(map['dateCreated']),
       updatedAt: DateTime.parse(map['updatedAt']),
+      status: GoalStatus.values.firstWhere(
+        (s) => s.name == (map['status'] ?? 'active'),
+        orElse: () => GoalStatus.active,
+      ),
     );
   }
 
-  /// Convenience: parse color from hex
   Color get color => ColorUtils.fromHex(colorHex);
 
-  /// Calculate progress as a percentage (0.0 → 1.0)
   double get progress => targetAmount == 0 ? 0 : savedAmount / targetAmount;
 
-  /// Clone with modifications
   Goal copyWith({
     int? id,
     String? name,
@@ -77,6 +81,7 @@ class Goal {
     String? colorHex,
     DateTime? dateCreated,
     DateTime? updatedAt,
+    GoalStatus? status,
   }) {
     return Goal(
       id: id ?? this.id,
@@ -89,6 +94,7 @@ class Goal {
       colorHex: colorHex ?? this.colorHex,
       dateCreated: dateCreated ?? this.dateCreated,
       updatedAt: updatedAt ?? this.updatedAt,
+      status: status ?? this.status,
     );
   }
 }

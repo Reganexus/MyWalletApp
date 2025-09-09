@@ -6,6 +6,7 @@ import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
+import 'package:mywallet/utils/WidgetHelper/status_dropdown.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,8 @@ class ManageBillsScreen extends StatefulWidget {
 }
 
 class _ManageBillsScreenState extends State<ManageBillsScreen> {
+  BillStatus? _selectedStatus;
+
   Future<void> _editBill(Bill bill) async {
     await showDraggableModal(
       context: context,
@@ -134,6 +137,16 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
   Widget build(BuildContext context) {
     final bills = context.watch<BillProvider>().bills;
 
+    // check available statuses
+    final hasPaid = bills.any((b) => b.status == BillStatus.paid);
+    final hasPending = bills.any((b) => b.status == BillStatus.pending);
+
+    // ✅ Apply filtering here
+    final filteredBills =
+        (_selectedStatus == null)
+            ? bills
+            : bills.where((b) => b.status == _selectedStatus).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Manage Bills"),
@@ -158,17 +171,26 @@ class _ManageBillsScreenState extends State<ManageBillsScreen> {
                         _buildLegendItem(Colors.green, "Paid"),
                         const SizedBox(width: 8),
                         _buildLegendItem(Colors.orange, "Unpaid"),
+                        const Spacer(),
+                        if (hasPaid && hasPending)
+                          BillStatusFilter(
+                            selectedStatus: _selectedStatus,
+                            onChanged: (val) {
+                              setState(() => _selectedStatus = val);
+                            },
+                          ),
                       ],
                     ),
                   ),
 
+                  // ✅ Use filteredBills here
                   Expanded(
                     child: ListView.separated(
                       padding: const EdgeInsets.all(12),
-                      itemCount: bills.length,
+                      itemCount: filteredBills.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 6),
                       itemBuilder: (context, index) {
-                        final bill = bills[index];
+                        final bill = filteredBills[index];
                         return _buildBillCard(bill);
                       },
                     ),

@@ -76,6 +76,27 @@ class _AddBillFormState extends State<AddBillForm> {
       return;
     }
 
+    final accountProvider = context.read<AccountProvider>();
+    final account = accountProvider.getAccountById(_selectedAccountId!);
+
+    if (account == null) {
+      OverlayMessage.show(
+        context,
+        message: "Error: The selected account was not found.",
+        isError: true,
+      );
+      return;
+    }
+
+    if (account.balance < _selectedBill!.amount) {
+      OverlayMessage.show(
+        context,
+        message: "Insufficient funds in ${account.name}.",
+        isError: true,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final tx = TransactionModel(
@@ -91,7 +112,16 @@ class _AddBillFormState extends State<AddBillForm> {
     final billProvider = context.read<BillProvider>();
 
     try {
+      // ✅ Deduct from account first
+      await accountProvider.deductFromAccount(
+        account.id!,
+        _selectedBill!.amount,
+      );
+
+      // ✅ Then save transaction
       await txProvider.addTransaction(tx);
+
+      // ✅ Finally mark bill as paid
       await billProvider.payBill(billId);
 
       if (!mounted) return;
@@ -119,7 +149,9 @@ class _AddBillFormState extends State<AddBillForm> {
 
   @override
   Widget build(BuildContext context) {
-    final accounts = context.watch<AccountProvider>().accounts;
+    final accountProvider = context.watch<AccountProvider>();
+    final accounts = accountProvider.accounts;
+
     final pendingBills =
         context
             .watch<BillProvider>()
@@ -139,6 +171,16 @@ class _AddBillFormState extends State<AddBillForm> {
                 .where((acc) => acc.currency == _selectedBill!.currency)
                 .toList();
 
+    final selectedAccount =
+        _selectedAccountId != null
+            ? accountProvider.getAccountById(_selectedAccountId!)
+            : null;
+
+    final isPayEnabled =
+        _selectedBill != null &&
+        selectedAccount != null &&
+        selectedAccount.balance >= _selectedBill!.amount;
+
     return SingleChildScrollView(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -156,7 +198,10 @@ class _AddBillFormState extends State<AddBillForm> {
             DropdownButtonFormField<int>(
               focusNode: _billFocus,
               isExpanded: true,
-              initialValue: _selectedBill?.id, // use ID here
+              initialValue:
+                  pendingBills.any((b) => b.id == _selectedBill?.id)
+                      ? _selectedBill?.id
+                      : null,
               items:
                   pendingBills.map((bill) {
                     return DropdownMenuItem(
@@ -185,11 +230,14 @@ class _AddBillFormState extends State<AddBillForm> {
             ),
             const SizedBox(height: 12),
 
-            // Select Account Dropdown
+            // Account Dropdown
             DropdownButtonFormField<int>(
               focusNode: _accountFocus,
               isExpanded: true,
-              initialValue: _selectedAccountId,
+              initialValue:
+                  filteredAccounts.any((acc) => acc.id == _selectedAccountId)
+                      ? _selectedAccountId
+                      : null,
               items:
                   filteredAccounts.map((acc) {
                     return DropdownMenuItem(
@@ -209,6 +257,23 @@ class _AddBillFormState extends State<AddBillForm> {
               validator:
                   (val) => val == null ? "Please select an account" : null,
             ),
+
+            // ⚠️ Warning if insufficient funds
+            if (_selectedBill != null &&
+                selectedAccount != null &&
+                selectedAccount.balance < _selectedBill!.amount)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4),
+                child: Text(
+                  "Insufficient funds in ${selectedAccount.name}",
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 12),
 
             // Amount Text Field (auto-populated and disabled)
@@ -246,7 +311,7 @@ class _AddBillFormState extends State<AddBillForm> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _isLoading ? null : _submit,
+                onPressed: isPayEnabled && !_isLoading ? _submit : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: baseColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
