@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mywallet/models/transaction.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/providers/bill_provider.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/bill.dart';
@@ -207,7 +208,7 @@ class _AddBillFormState extends State<AddBillForm> {
                     return DropdownMenuItem(
                       value: bill.id,
                       child: Text(
-                        "${bill.name} (${bill.currency} ${bill.amount})",
+                        "${bill.name} (${formatFullBalance(bill.amount, currency: bill.currency)})",
                       ),
                     );
                   }).toList(),
@@ -215,8 +216,11 @@ class _AddBillFormState extends State<AddBillForm> {
                 setState(() {
                   _selectedBill = pendingBills.firstWhere((b) => b.id == id);
                   if (_selectedBill != null) {
-                    _amountController.text = _selectedBill!.amount.toString();
-                    _selectedAccountId = null; // reset account selection
+                    _amountController.text = formatFullBalance(
+                      _selectedBill!.amount,
+                      currency: _selectedBill!.currency,
+                    );
+                    _selectedAccountId = null;
                   }
                 });
               },
@@ -243,7 +247,7 @@ class _AddBillFormState extends State<AddBillForm> {
                     return DropdownMenuItem(
                       value: acc.id,
                       child: Text(
-                        "${acc.name} (${acc.currency} ${acc.balance})",
+                        "${acc.name} (${formatFullBalance(acc.balance, currency: acc.currency)})",
                       ),
                     );
                   }).toList(),
@@ -304,6 +308,7 @@ class _AddBillFormState extends State<AddBillForm> {
                 isFocused: _noteFocus.hasFocus,
                 context: context,
               ),
+              maxLength: 30,
             ),
             const SizedBox(height: 20),
 

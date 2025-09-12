@@ -25,18 +25,18 @@ class BackupService {
     final dbPath = await getDatabasesPath();
     final dbFile = File(join(dbPath, 'mywallet.db'));
 
-    // Copy to chosen folder
-    final backupPath = join(outputDir, 'mywallet_backup.db');
+    // Save with `.mwb` extension
+    final backupPath = join(outputDir, 'mywallet_backup.mwb');
     final backupFile = await dbFile.copy(backupPath);
 
     return backupFile;
   }
 
   Future<void> restoreDatabase() async {
-    // Let user pick a file
+    // Let user pick a `.mwb` file
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['db'],
+      allowedExtensions: ['mwb'],
     );
 
     if (result == null) {
@@ -54,10 +54,10 @@ class BackupService {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, 'mywallet.db');
 
-      // Overwrite DB with the selected file
+      // Overwrite DB with the selected `.mwb` file
       await pickedFile.copy(path);
 
-      // ✅ Don’t re-create tables, just reopen normally
+      // ✅ Reopen DB
       await dbService.database;
     } else {
       throw Exception("Selected file not found!");

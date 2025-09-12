@@ -7,7 +7,7 @@ import 'package:mywallet/services/layout_pref.dart';
 import 'package:mywallet/widgets/Account_Balance/account_empty.dart';
 import 'package:mywallet/widgets/Account_Balance/account_form.dart';
 import 'package:mywallet/widgets/Account_Balance/account_list_view.dart';
-import 'package:mywallet/widgets/Account_Balance/manage_account.dart';
+import 'package:mywallet/widgets/Account_Balance/account_manage.dart';
 import 'package:provider/provider.dart';
 
 class AccountBalanceWidget extends StatefulWidget {

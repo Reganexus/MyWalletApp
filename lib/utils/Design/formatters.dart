@@ -93,3 +93,9 @@ String formatFullDateTime(DateTime date) {
   final formatter = DateFormat('MMMM d, yyyy h:mm a');
   return formatter.format(date);
 }
+
+String formatAccountName(String input) {
+  if (input.isEmpty) return "";
+
+  return input[0].toUpperCase() + input.substring(1);
+}

@@ -8,7 +8,7 @@ import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/services/layout_pref.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/manage_bills.dart';
+import 'package:mywallet/widgets/Upcoming_Bills/bill_manage.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_list_view.dart';
 import 'package:mywallet/widgets/Upcoming_Bills/bill_empty.dart';
 import 'package:mywallet/utils/WidgetHelper/add_manage.dart';

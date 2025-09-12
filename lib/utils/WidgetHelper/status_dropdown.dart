@@ -15,23 +15,26 @@ class BillStatusFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<BillStatus?>(
-      value: selectedStatus,
-      isDense: true,
-      hint: const Text("Filter"),
-      items: [
-        if (showAll) const DropdownMenuItem(value: null, child: Text("All")),
-        const DropdownMenuItem(value: BillStatus.paid, child: Text("Paid")),
-        const DropdownMenuItem(
-          value: BillStatus.pending,
-          child: Text("Pending"),
+    return SizedBox(
+      height: 30,
+      child: DropdownButton<BillStatus?>(
+        value: selectedStatus,
+        isDense: true,
+        hint: const Text("Filter"),
+        items: [
+          if (showAll) const DropdownMenuItem(value: null, child: Text("All")),
+          const DropdownMenuItem(value: BillStatus.paid, child: Text("Paid")),
+          const DropdownMenuItem(
+            value: BillStatus.pending,
+            child: Text("Pending"),
+          ),
+        ],
+        style: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
-      ],
-      style: TextStyle(
-        fontSize: 14,
-        color: Theme.of(context).textTheme.bodyLarge?.color,
+        onChanged: onChanged,
       ),
-      onChanged: onChanged,
     );
   }
 }

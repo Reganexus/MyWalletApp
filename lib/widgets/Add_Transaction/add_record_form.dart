@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/profile_provider.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/transaction.dart';
@@ -119,6 +120,11 @@ class _AddRecordFormState extends State<AddRecordForm> {
         profile?.colorPreference != null
             ? Color(int.parse(profile!.colorPreference!))
             : Colors.blue;
+    final isSaveEnabled =
+        _selectedAccountId != null &&
+        _amountController.text.isNotEmpty &&
+        double.tryParse(_amountController.text) != null &&
+        _category.isNotEmpty;
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -143,7 +149,7 @@ class _AddRecordFormState extends State<AddRecordForm> {
                         (acc) => DropdownMenuItem(
                           value: acc.id,
                           child: Text(
-                            "${acc.name} (${acc.currency} ${acc.balance})",
+                            "${acc.name} (${formatFullBalance(acc.balance, currency: acc.currency)})",
                           ),
                         ),
                       )
@@ -233,6 +239,7 @@ class _AddRecordFormState extends State<AddRecordForm> {
                 isFocused: _noteFocus.hasFocus,
                 context: context,
               ),
+              maxLength: 30,
             ),
             const SizedBox(height: 20),
 
@@ -240,7 +247,7 @@ class _AddRecordFormState extends State<AddRecordForm> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _isLoading ? null : _submit,
+                onPressed: isSaveEnabled && !_isLoading ? _submit : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: baseColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
