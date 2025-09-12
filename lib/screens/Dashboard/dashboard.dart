@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
-import 'package:mywallet/screens/latest_rates.dart';
+import 'package:mywallet/screens/Rates/latest_rates.dart';
 import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
-import 'package:mywallet/widgets/Goal/set_goal_widget.dart';
+import 'package:mywallet/widgets/Goal/goal_widget.dart';
 import 'package:mywallet/widgets/Total_Balance/total_balance.dart';
 import 'package:provider/provider.dart';
-import '../widgets/Account_Balance/account_balance_widget.dart';
-import '../widgets/Upcoming_Bills/upcoming_bills_widget.dart';
-import '../widgets/Graph_Section/graph_wrapper.dart';
-import '../widgets/Sidebar/profile_sidebar.dart';
+import '../../widgets/Account_Balance/account_widget.dart';
+import '../../widgets/Upcoming_Bills/bill_widget.dart';
+import '../../widgets/Graph_Section/graph_wrapper.dart';
+import '../../widgets/Sidebar/profile_sidebar.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,8 +21,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Track which pill is selected
-  String selectedSection = "accounts"; // "accounts" | "bills"
+  String selectedSection = "accounts";
 
   @override
   Widget build(BuildContext context) {

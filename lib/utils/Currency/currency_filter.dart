@@ -21,15 +21,16 @@ class CurrencyFilter extends StatelessWidget {
       child: DropdownButton<String>(
         value: selectedCurrency,
         isDense: true,
-        style: TextStyle(
-          fontSize: 14,
-          color: Theme.of(context).textTheme.bodyLarge?.color,
-        ),
+        hint: const Text("Currency"),
         items:
             [
               "All",
               ...currencies,
             ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+        style: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
         onChanged: onChanged,
       ),
     );

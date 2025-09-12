@@ -9,54 +9,65 @@ class GoalProvider extends ChangeNotifier {
   GoalProvider({required this.db});
 
   List<Goal> _goals = [];
-
   List<Goal> get goals => _goals;
 
-  /// Load all goals from DB
+  /// Load all goals from database
   Future<void> loadGoals() async {
     try {
-      final data = await db.getGoals();
-      _goals = data;
+      final goals = await db.getGoals();
+      _goals = goals;
+      notifyListeners();
     } catch (e) {
       print("❌ Failed to load goals: $e");
     }
-    notifyListeners();
   }
 
-  /// Add new goal
+  /// Add a new goal
   Future<void> addGoal(Goal goal) async {
     try {
-      await db.insertGoal(goal);
-      await loadGoals();
+      final inserted = await db.insertGoal(goal);
+      _goals.add(inserted); // ✅ add directly
+      notifyListeners();
     } catch (e) {
       print("❌ Failed to add goal: $e");
+      rethrow;
     }
   }
 
-  /// Update existing goal
+  /// Update an existing goal
   Future<void> updateGoal(Goal goal) async {
     try {
       await db.updateGoal(goal);
-      await loadGoals();
+      final index = _goals.indexWhere((g) => g.id == goal.id);
+      if (index != -1) {
+        _goals[index] = goal;
+      }
+      notifyListeners();
     } catch (e) {
       print("❌ Failed to update goal: $e");
+      rethrow;
     }
   }
 
-  /// Delete goal by ID
+  /// Delete a goal
   Future<void> deleteGoal(int id) async {
     try {
       await db.deleteGoal(id);
-      await loadGoals();
+      _goals.removeWhere((g) => g.id == id); // ✅ update memory
+      notifyListeners();
     } catch (e) {
       print("❌ Failed to delete goal: $e");
+      rethrow;
     }
   }
 
+  /// Contribute to a goal
   Future<void> contributeToGoal(int goalId, double amount) async {
     try {
-      final goal = _goals.firstWhere((g) => g.id == goalId);
+      final index = _goals.indexWhere((g) => g.id == goalId);
+      if (index == -1) throw Exception("Goal not found");
 
+      final goal = _goals[index];
       final newSaved = goal.savedAmount + amount;
       final isCompleted = newSaved >= goal.targetAmount;
 
@@ -67,16 +78,20 @@ class GoalProvider extends ChangeNotifier {
       );
 
       await db.updateGoal(updatedGoal);
-      await loadGoals();
+      _goals[index] = updatedGoal; // ✅ update memory
+      notifyListeners();
     } catch (e) {
       print("❌ Failed to contribute to goal: $e");
       rethrow;
     }
   }
 
-  /// Quick access: total saved across all goals
-  double get totalSaved => _goals.fold(0, (sum, g) => sum + g.savedAmount);
-
-  /// Quick access: total target across all goals
-  double get totalTarget => _goals.fold(0, (sum, g) => sum + g.targetAmount);
+  /// Get goal by ID
+  Goal? getGoalById(int goalId) {
+    try {
+      return _goals.firstWhere((g) => g.id == goalId);
+    } catch (_) {
+      return null;
+    }
+  }
 }

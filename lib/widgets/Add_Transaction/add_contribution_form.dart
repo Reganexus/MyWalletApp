@@ -5,6 +5,7 @@ import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/goal_provider.dart';
 import 'package:mywallet/providers/transaction_provider.dart';
 import 'package:mywallet/utils/Design/form_decoration.dart';
+import 'package:mywallet/utils/Design/formatters.dart' show formatFullBalance;
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:provider/provider.dart';
 
@@ -186,14 +187,14 @@ class _AddContributionState extends State<AddContribution> {
                     return DropdownMenuItem(
                       value: goal.id,
                       child: Text(
-                        "${goal.name} (Target: ${goal.currency} ${goal.targetAmount})",
+                        "${goal.name} (Target: ${formatFullBalance(goal.targetAmount, currency: goal.currency)})",
                       ),
                     );
                   }).toList(),
               onChanged: (val) {
                 setState(() {
                   _selectedGoalId = val;
-                  _selectedAccountId = null; // reset when goal changes
+                  _selectedAccountId = null;
                   if (val != null) {
                     final goal = goals.firstWhere((g) => g.id == val);
                     _remainingNeeded = goal.targetAmount - goal.savedAmount;
@@ -219,7 +220,13 @@ class _AddContributionState extends State<AddContribution> {
                 children: [
                   TextFormField(
                     enabled: false,
-                    initialValue: _remainingNeeded!.toStringAsFixed(2),
+                    initialValue: formatFullBalance(
+                      _remainingNeeded!,
+                      currency:
+                          goals
+                              .firstWhere((g) => g.id == _selectedGoalId)
+                              .currency,
+                    ),
                     decoration: buildInputDecoration(
                       "Remaining Needed",
                       color: baseColor,
@@ -241,7 +248,7 @@ class _AddContributionState extends State<AddContribution> {
                     return DropdownMenuItem(
                       value: acc.id,
                       child: Text(
-                        "${acc.name} (${acc.currency} ${acc.balance})",
+                        "${acc.name} (${formatFullBalance(acc.balance, currency: acc.currency)})",
                       ),
                     );
                   }).toList(),

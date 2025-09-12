@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mywallet/screens/pin_screen.dart';
+import 'package:mywallet/screens/Pin/pin.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 
 class ChangePinStarterScreen extends StatelessWidget {

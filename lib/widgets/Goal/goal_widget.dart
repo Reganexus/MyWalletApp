@@ -7,7 +7,7 @@ import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
 import 'package:mywallet/widgets/Goal/goal_empty.dart';
 import 'package:mywallet/widgets/Goal/goal_form.dart';
 import 'package:mywallet/widgets/Goal/goal_list_view.dart';
-import 'package:mywallet/widgets/Goal/manage_goal.dart';
+import 'package:mywallet/widgets/Goal/goal_manage.dart';
 import 'package:provider/provider.dart';
 
 class GoalsWidget extends StatefulWidget {

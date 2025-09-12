@@ -4,6 +4,7 @@ import 'package:mywallet/models/account.dart';
 import 'package:mywallet/providers/account_provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/services/currencies.dart';
+import 'package:mywallet/utils/Design/formatters.dart';
 import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
@@ -89,7 +90,7 @@ class _AccountFormState extends State<AccountForm> {
 
     setState(() => _isLoading = true);
 
-    final name = _nameController.text.trim();
+    final name = formatAccountName(_nameController.text.trim());
     final balance = double.tryParse(_balanceController.text) ?? 0.0;
     final hex = ColorUtils.colorToHex(_selectedColor);
 
@@ -197,6 +198,7 @@ class _AccountFormState extends State<AccountForm> {
                       (value == null || value.isEmpty)
                           ? 'Please enter a name'
                           : null,
+              maxLength: 15,
             ),
             const SizedBox(height: 12),
 

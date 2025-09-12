@@ -148,7 +148,7 @@ class _BillFormState extends State<BillForm> {
 
     setState(() => _isLoading = true);
 
-    final name = _nameController.text.trim();
+    final name = formatAccountName(_nameController.text.trim());
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final hex = ColorUtils.colorToHex(_selectedColor);
 
@@ -255,6 +255,7 @@ class _BillFormState extends State<BillForm> {
                       value == null || value.isEmpty
                           ? 'Please enter a name'
                           : null,
+              maxLength: 15,
             ),
             const SizedBox(height: 12),
 
