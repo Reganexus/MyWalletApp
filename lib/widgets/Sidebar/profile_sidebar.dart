@@ -134,6 +134,14 @@ class ProfileSidebar extends StatelessWidget {
               );
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.bar_chart),
+            title: const Text("Graphs"),
+            onTap: () {
+              Navigator.pushNamed(context, "/graph-options");
+            },
+          ),
+
           const Divider(),
 
           // Backup & Data

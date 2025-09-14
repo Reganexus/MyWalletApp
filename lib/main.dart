@@ -6,6 +6,7 @@ import 'package:mywallet/screens/Getting_Started/change_pin_starter.dart';
 import 'package:mywallet/screens/Getting_Started/edit_profile_starter.dart';
 import 'package:mywallet/screens/Getting_Started/get_started.dart';
 import 'package:mywallet/screens/Dashboard/dashboard.dart';
+import 'package:mywallet/screens/GraphOptions/graph_options.dart';
 import 'package:mywallet/screens/Pin/pin.dart';
 import 'package:mywallet/widgets/Sidebar/edit_profile_screen.dart';
 import 'package:mywallet/widgets/Sidebar/backup_screen.dart';
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
             '/edit-profile': (context) => const EditProfileScreen(),
             '/delete': (context) => const DeleteAllData(),
             '/backup': (context) => const BackupScreen(),
+            "/graph-options": (_) => const GraphOptionsScreen(),
           },
         );
       },

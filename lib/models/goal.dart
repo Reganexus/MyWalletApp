@@ -60,7 +60,7 @@ class Goal {
       dateCreated: DateTime.parse(map['dateCreated']),
       updatedAt: DateTime.parse(map['updatedAt']),
       status: GoalStatus.values.firstWhere(
-        (s) => s.name == (map['status'] ?? 'active'),
+        (s) => s.name == map['status'],
         orElse: () => GoalStatus.active,
       ),
     );
