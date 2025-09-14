@@ -67,19 +67,18 @@ class _DeleteAllDataState extends State<DeleteAllData> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           children: [
             const Icon(
               Icons.warning_amber_rounded,
               color: Colors.white,
-              size: 36,
+              size: 48,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                "This will permanently delete all accounts, bills, and transactions. This action cannot be undone.",
-                style: TextStyle(fontSize: 14, color: Colors.white),
-              ),
+            const SizedBox(height: 8),
+            Text(
+              "This will permanently delete all accounts, bills, goals, and transactions. This action cannot be undone.",
+              style: TextStyle(fontSize: 14, color: Colors.white),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

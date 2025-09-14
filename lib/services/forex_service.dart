@@ -11,75 +11,87 @@ class ForexService {
 
   static const Duration _cacheDuration = Duration(hours: 2);
 
+  /// Get conversion rate FROM → TO
   static Future<double?> getRate(String from, String to) async {
-    if (from == to) return 1.0; // trivial case
+    if (from == to) return 1.0;
 
     final prefs = await SharedPreferences.getInstance();
     final cachedData = prefs.getString(_cacheKey);
     final cachedTime = prefs.getInt(_timestampKey);
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    Map<String, dynamic> cache = {};
+    Map<String, dynamic> rates = {};
     double? staleRate;
 
+    // 🔹 Load from cache
     if (cachedData != null && cachedTime != null) {
       try {
-        cache = json.decode(cachedData);
+        rates = json.decode(cachedData);
 
-        if (cache[from] != null && cache[from][to] != null) {
-          final rate = (cache[from][to] as num).toDouble();
+        if (rates.containsKey(from) && rates.containsKey(to)) {
+          final rateFrom = (rates[from] as num).toDouble();
+          final rateTo = (rates[to] as num).toDouble();
 
-          // ✅ Check if cache is still fresh (within 2h)
+          // rate formula: target / base
+          final rate = rateTo / rateFrom;
+
           if (now - cachedTime < _cacheDuration.inMilliseconds) {
             print("✅ Using cached rate for $from → $to");
             return rate;
           } else {
             print("⌛ Cache expired, will fetch new data.");
-            staleRate = rate; // keep as fallback
+            staleRate = rate; // fallback
           }
         }
-      } catch (_) {
+      } catch (e) {
+        print("⚠️ Failed to parse cache: $e");
         await prefs.remove(_cacheKey);
         await prefs.remove(_timestampKey);
       }
     }
 
-    // 🌍 Fetch new rates if cache expired or not available
+    // 🌍 Fetch from API
     try {
-      print("🌍 Fetching new rates for base: $from");
+      print("🌍 Fetching fresh rates with base=$from");
       final url = Uri.parse("$_apiBase?base=$from");
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        // 🐞 Debug: print full response JSON
-        final debugJson = const JsonEncoder.withIndent('  ').convert(data);
-        print("📦 API Response:\n$debugJson");
-
         if (data["rates"] != null) {
-          final rates = data["rates"] as Map<String, dynamic>;
+          rates = Map<String, dynamic>.from(data["rates"]);
 
-          // Update cache
-          cache[from] = rates;
-          await prefs.setString(_cacheKey, json.encode(cache));
+          // Save full rates map (not nested)
+          await prefs.setString(_cacheKey, json.encode(rates));
           await prefs.setInt(_timestampKey, now);
 
-          if (rates[to] != null) {
-            return (rates[to] as num).toDouble();
+          print("💾 Saved new rates: ${rates.keys.length} currencies");
+
+          if (rates.containsKey(from) && rates.containsKey(to)) {
+            final rateFrom = (rates[from] as num).toDouble();
+            final rateTo = (rates[to] as num).toDouble();
+            return rateTo / rateFrom;
           }
         }
       } else {
         print("⚠️ API request failed with status: ${response.statusCode}");
       }
     } catch (e) {
-      print("❌ API failed, using stale cache if available: $e");
+      print("❌ API failed: $e");
     }
 
-    // ✅ Fallback to stale cache if available
-    return staleRate;
+    // ♻️ Fallback
+    if (staleRate != null) {
+      print("♻️ Returning stale cached rate for $from → $to");
+      return staleRate;
+    }
+
+    print("❌ No rate available for $from → $to");
+    return null;
   }
 
+  /// List all currencies stored in cache
   static Future<List<String>> getCachedCurrencies() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedData = prefs.getString(_cacheKey);
@@ -87,19 +99,10 @@ class ForexService {
     if (cachedData == null) return [];
 
     try {
-      final Map<String, dynamic> cache = json.decode(cachedData);
-
-      // Get all keys from the cache (bases) and all target currencies
-      final Set<String> currencies = {};
-
-      for (final base in cache.keys) {
-        currencies.add(base); // base currency
-        final rates = cache[base] as Map<String, dynamic>;
-        currencies.addAll(rates.keys); // target currencies
-      }
-
-      return currencies.toList()..sort();
-    } catch (_) {
+      final Map<String, dynamic> rates = json.decode(cachedData);
+      return rates.keys.toList()..sort();
+    } catch (e) {
+      print("⚠️ Failed to parse cached currencies: $e");
       return [];
     }
   }
