@@ -1,5 +1,6 @@
 // lib/app_providers.dart
 import 'package:flutter/material.dart';
+import 'package:mywallet/providers/graph_options_provider.dart';
 import 'package:mywallet/services/db_service.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/providers/account_provider.dart';
@@ -37,6 +38,7 @@ MultiProvider buildAppProviders(Widget child, DBService dbService) {
         create: (_) => GoalProvider(db: dbService)..loadGoals(),
       ),
       ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ChangeNotifierProvider(create: (_) => GraphOptionsProvider()),
     ],
     child: child,
   );

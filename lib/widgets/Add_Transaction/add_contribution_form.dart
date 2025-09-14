@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/models/goal.dart';
 import 'package:mywallet/models/transaction.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 import 'package:mywallet/providers/account_provider.dart';
@@ -150,9 +151,10 @@ class _AddContributionState extends State<AddContribution> {
             : Colors.blue;
 
     final accounts = context.watch<AccountProvider>().accounts;
-    final goals = context.watch<GoalProvider>().goals;
+    final allGoals = context.watch<GoalProvider>().goals;
+    final goals =
+        allGoals.where((g) => g.status != GoalStatus.completed).toList();
 
-    // ✅ filter accounts based on selected goal
     final filteredAccounts =
         _selectedGoalId == null
             ? accounts

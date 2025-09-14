@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mywallet/providers/graph_options_provider.dart';
 import 'package:mywallet/widgets/Graph_Section/Graphs/graph_top_expense.dart';
 import 'package:mywallet/widgets/Graph_Section/Graphs/graph_weekly_spending.dart';
 import 'package:provider/provider.dart';
@@ -15,14 +16,20 @@ class GraphsSectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final accounts = context.watch<AccountProvider>().accounts;
     final transactions = context.watch<TransactionProvider>().transactions;
+    final graphOptions = context.watch<GraphOptionsProvider>();
 
     return Column(
       children: [
-        WeeklySpendingHeatmap(transactions: transactions),
-        TopExpenseGraph(transactions: transactions),
-        BalanceByCurrencyChart(accounts: accounts),
-        IncomeExpenseTrendGraph(transactions: transactions),
-        AccountDistributionGraph(accounts: accounts),
+        if (graphOptions.isGraphVisible('weeklySpending'))
+          WeeklySpendingHeatmap(transactions: transactions),
+        if (graphOptions.isGraphVisible('topExpense'))
+          TopExpenseGraph(transactions: transactions),
+        if (graphOptions.isGraphVisible('balanceByCurrency'))
+          BalanceByCurrencyChart(accounts: accounts),
+        if (graphOptions.isGraphVisible('incomeExpense'))
+          IncomeExpenseTrendGraph(transactions: transactions),
+        if (graphOptions.isGraphVisible('accountDistribution'))
+          AccountDistributionGraph(accounts: accounts),
       ],
     );
   }
