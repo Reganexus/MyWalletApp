@@ -103,6 +103,7 @@ class _WeeklySpendingHeatmapState extends State<WeeklySpendingHeatmap> {
       }
     }
 
+    if (!mounted) return;
     setState(() => _loading = false);
   }
 

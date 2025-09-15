@@ -87,6 +87,14 @@ class _GoalFormState extends State<GoalForm> {
   }
 
   Future<void> _pickDeadline() async {
+    final profile =
+        Provider.of<ProfileProvider>(context, listen: false).profile;
+    final theme = Theme.of(context);
+    final baseColor =
+        profile?.colorPreference != null
+            ? Color(int.parse(profile!.colorPreference!))
+            : Colors.blue;
+
     final now = DateTime.now();
     final initial = _deadline ?? now;
     final picked = await showDatePicker(
@@ -94,6 +102,28 @@ class _GoalFormState extends State<GoalForm> {
       initialDate: initial,
       firstDate: now,
       lastDate: DateTime(now.year + 10),
+      builder: (context, child) {
+        return Theme(
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: baseColor,
+              onPrimary: Colors.white,
+              surface: theme.colorScheme.surface,
+              onSurface: theme.colorScheme.onSurface,
+              secondary: baseColor,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: baseColor),
+            ),
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() => _deadline = picked);
@@ -278,15 +308,21 @@ class _GoalFormState extends State<GoalForm> {
             const SizedBox(height: 12),
 
             // 4. Deadline toggle
-            Row(
+            Column(
               children: [
-                Checkbox(
-                  value: _useFixedDeadline,
-                  onChanged: (val) {
-                    setState(() => _useFixedDeadline = val ?? false);
-                  },
+                Row(
+                  children: [
+                    Checkbox(
+                      activeColor: baseColor,
+                      value: _useFixedDeadline,
+                      onChanged: (val) {
+                        setState(() => _useFixedDeadline = val ?? false);
+                      },
+                    ),
+                    const Text("Add a fixed date"),
+                  ],
                 ),
-                const Text("Add a fixed date"),
+                const SizedBox(height: 12),
               ],
             ),
             if (_useFixedDeadline) ...[

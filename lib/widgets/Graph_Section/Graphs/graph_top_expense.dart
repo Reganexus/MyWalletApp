@@ -73,6 +73,7 @@ class _TopExpenseGraphState extends State<TopExpenseGraph> {
       categoryTotals[tx.category] = (categoryTotals[tx.category] ?? 0) + amount;
     }
 
+    if (!mounted) return;
     setState(() {
       _convertedExpenses = categoryTotals;
       _loading = false;

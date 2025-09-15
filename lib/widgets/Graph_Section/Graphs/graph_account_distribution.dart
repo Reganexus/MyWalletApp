@@ -69,6 +69,7 @@ class _AccountDistributionGraphState extends State<AccountDistributionGraph> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _convertedBalances = newBalances;
       _loading = false;
