@@ -21,27 +21,79 @@ class ConversionResult extends StatelessWidget {
     return FutureBuilder<double?>(
       future: ForexService.getRate(from, to),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        Widget child;
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
           // Loading state
-          return Container(
-            padding: const EdgeInsets.all(20),
-            child: const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+          child = const Center(
+            child: CircularProgressIndicator(color: Colors.white),
           );
-        }
-
-        final rate = snapshot.data;
-
-        if (rate == null) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            child: const Center(
-              child: Text(
+        } else if (snapshot.data == null) {
+          // Null rate
+          child = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
                 "Rate unavailable",
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
+              Text(
+                'Connect to the internet to fetch the latest rates',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Success state
+          final rate = snapshot.data!;
+          child = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '1 $from ',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'is equal to',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${rate.toStringAsFixed(4)} $to',
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Last updated: ${formatFullDateTime(DateTime.now().toLocal())}',
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
+              ),
+            ],
           );
         }
 
@@ -64,50 +116,8 @@ class ConversionResult extends StatelessWidget {
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '1 $from ',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      TextSpan(
-                        text: 'is equal to',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${rate.toStringAsFixed(4)} $to',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Last updated: ${formatFullDateTime(DateTime.now().toLocal())}',
-                  style: const TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
+          padding: const EdgeInsets.all(20),
+          child: child,
         );
       },
     );

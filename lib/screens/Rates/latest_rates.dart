@@ -5,6 +5,7 @@ import 'package:mywallet/services/forex_service.dart';
 import 'package:mywallet/utils/Currency/conversion_form.dart';
 import 'package:mywallet/utils/Currency/conversion_result.dart';
 import 'package:mywallet/utils/Currency/rate_list.dart';
+import 'package:mywallet/utils/Currency/rates_info.dart';
 import 'package:provider/provider.dart';
 
 class LatestRatesScreen extends StatefulWidget {
@@ -110,6 +111,20 @@ class _LatestRatesScreenState extends State<LatestRatesScreen> {
         scrolledUnderElevation: 0,
         elevation: 0,
         titleSpacing: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              child: Icon(Icons.info_outline, size: 28, color: baseColor),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RatesInfoScreen()),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: Stack(
         children: [
