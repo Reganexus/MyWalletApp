@@ -73,6 +73,7 @@ class _BalanceByCurrencyChartState extends State<BalanceByCurrencyChart> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _convertedBalances = newBalances;
       _loading = false;

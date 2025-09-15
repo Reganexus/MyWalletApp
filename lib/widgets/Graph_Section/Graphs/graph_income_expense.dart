@@ -111,6 +111,7 @@ class _IncomeExpenseTrendGraphState extends State<IncomeExpenseTrendGraph> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _loading = false;
     });
