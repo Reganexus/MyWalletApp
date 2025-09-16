@@ -7,7 +7,7 @@ import 'package:mywallet/utils/Design/overlay_message.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 import 'package:mywallet/utils/WidgetHelper/status_dropdown.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
+import 'package:mywallet/widgets/Bills/bill_form.dart';
 import 'package:provider/provider.dart';
 
 class ManageBillsScreen extends StatefulWidget {

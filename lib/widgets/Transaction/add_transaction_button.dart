@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mywallet/widgets/Add_Transaction/add_contribution_form.dart';
-import 'package:mywallet/widgets/Add_Transaction/pay_bill_form.dart';
-import 'package:mywallet/widgets/Add_Transaction/add_record_form.dart';
+import 'package:mywallet/widgets/Transaction/add_contribution_form.dart';
+import 'package:mywallet/widgets/Transaction/pay_bill_form.dart';
+import 'package:mywallet/widgets/Transaction/add_record_form.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/providers/profile_provider.dart';
 

@@ -4,10 +4,10 @@ import 'package:mywallet/utils/WidgetHelper/add_manage.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/utils/Currency/currency_filter.dart';
 import 'package:mywallet/services/layout_pref.dart';
-import 'package:mywallet/widgets/Account_Balance/account_empty.dart';
-import 'package:mywallet/widgets/Account_Balance/account_form.dart';
-import 'package:mywallet/widgets/Account_Balance/account_list_view.dart';
-import 'package:mywallet/widgets/Account_Balance/account_manage.dart';
+import 'package:mywallet/widgets/Account/account_empty.dart';
+import 'package:mywallet/widgets/Account/account_form.dart';
+import 'package:mywallet/widgets/Account/account_list_view.dart';
+import 'package:mywallet/widgets/Account/account_manage.dart';
 import 'package:provider/provider.dart';
 
 class AccountBalanceWidget extends StatefulWidget {

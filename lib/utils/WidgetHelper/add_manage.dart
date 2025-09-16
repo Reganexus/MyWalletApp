@@ -4,7 +4,8 @@ class AccountActions extends StatelessWidget {
   final VoidCallback onAdd;
   final VoidCallback onManage;
   final VoidCallback? onPay;
-  final VoidCallback? onContribute; // 👈 new
+  final VoidCallback? onContribute;
+  final VoidCallback? onCalendar;
 
   const AccountActions({
     super.key,
@@ -12,6 +13,7 @@ class AccountActions extends StatelessWidget {
     required this.onManage,
     this.onPay,
     this.onContribute,
+    this.onCalendar,
   });
 
   @override
@@ -40,10 +42,21 @@ class AccountActions extends StatelessWidget {
                 children: [
                   Icon(Icons.settings),
                   SizedBox(width: 8),
-                  Text("Manage"),
+                  Text("Manage Bills"),
                 ],
               ),
             ),
+            if (onCalendar != null)
+              const PopupMenuItem<int>(
+                value: 4,
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month),
+                    SizedBox(width: 8),
+                    Text("Bills Calendar"),
+                  ],
+                ),
+              ),
             if (onPay != null)
               const PopupMenuItem<int>(
                 value: 2,
@@ -73,6 +86,7 @@ class AccountActions extends StatelessWidget {
         if (value == 1) onManage();
         if (value == 2 && onPay != null) onPay!();
         if (value == 3 && onContribute != null) onContribute!();
+        if (value == 4 && onCalendar != null) onCalendar!();
       },
       child: const Icon(Icons.more_vert, size: 24),
     );
