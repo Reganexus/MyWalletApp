@@ -6,9 +6,9 @@ import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
 import 'package:mywallet/widgets/Goal/goal_widget.dart';
 import 'package:mywallet/widgets/Total_Balance/total_balance.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/Account_Balance/account_widget.dart';
-import '../../widgets/Upcoming_Bills/bill_widget.dart';
-import '../../widgets/Graph_Section/graph_wrapper.dart';
+import '../../widgets/Account/account_widget.dart';
+import '../../widgets/Bills/bill_widget.dart';
+import '../../widgets/Graph/graph_wrapper.dart';
 import '../../widgets/Sidebar/profile_sidebar.dart';
 
 class DashboardScreen extends StatefulWidget {

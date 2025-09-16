@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mywallet/screens/Calendar/bill_calendar.dart';
 import 'package:mywallet/utils/WidgetHelper/add_transaction.dart';
 import 'package:mywallet/utils/WidgetHelper/status_dropdown.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/bill_form.dart';
+import 'package:mywallet/widgets/Bills/bill_form.dart';
 import 'package:provider/provider.dart';
 import 'package:mywallet/models/bill.dart';
 import 'package:mywallet/providers/bill_provider.dart';
 import 'package:mywallet/utils/WidgetHelper/add_modal.dart';
 import 'package:mywallet/services/layout_pref.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/bill_manage.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/bill_list_view.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/bill_empty.dart';
+import 'package:mywallet/widgets/Bills/bill_manage.dart';
+import 'package:mywallet/widgets/Bills/bill_list_view.dart';
+import 'package:mywallet/widgets/Bills/bill_empty.dart';
 import 'package:mywallet/utils/WidgetHelper/add_manage.dart';
 
 class UpcomingBillsWidget extends StatefulWidget {
@@ -118,6 +119,16 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
                     onAdd: _handleAddBill,
                     onManage: _handleManageBills,
                     onPay: _handlePayBill,
+                    onCalendar:
+                        bills.isNotEmpty
+                            ? () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const BillCalendarScreen(),
+                                ),
+                              );
+                            }
+                            : null,
                   ),
                 ],
               ),

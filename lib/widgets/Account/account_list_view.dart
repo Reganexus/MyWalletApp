@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mywallet/models/account.dart';
-import 'package:mywallet/widgets/Account_Balance/account_card.dart';
+import 'package:mywallet/widgets/Account/account_card.dart';
 
 class AccountListView extends StatelessWidget {
   final List<Account> accounts;

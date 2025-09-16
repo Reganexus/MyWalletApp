@@ -10,7 +10,7 @@ import 'package:mywallet/utils/WidgetHelper/color_picker.dart';
 import 'package:mywallet/utils/Design/color_utils.dart';
 import 'package:mywallet/utils/WidgetHelper/confirmation_dialog.dart';
 import 'package:mywallet/utils/Design/form_decoration.dart';
-import 'package:mywallet/widgets/Upcoming_Bills/bill_disclaimer.dart';
+import 'package:mywallet/widgets/Bills/bill_disclaimer.dart';
 import 'package:provider/provider.dart';
 
 class BillForm extends StatefulWidget {
