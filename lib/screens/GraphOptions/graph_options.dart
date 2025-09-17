@@ -97,12 +97,6 @@ class GraphOptionsScreen extends StatelessWidget {
         'icon': Icons.money_off,
       },
       {
-        'key': 'balanceByCurrency',
-        'title': 'Balance by Currency',
-        'desc': 'Breakdown of account balances by currency.',
-        'icon': Icons.currency_exchange,
-      },
-      {
         'key': 'incomeExpense',
         'title': 'Income vs Expense Trend',
         'desc': 'Line chart comparing income and expenses over time.',

@@ -235,7 +235,7 @@ class _WeeklySpendingHeatmapState extends State<WeeklySpendingHeatmap> {
                                 maxSpending == 0 || value == 0
                                     ? 0
                                     : ((value / maxSpending) * 200 + 55)
-                                        .clamp(55, 255)
+                                        .clamp(199, 255)
                                         .toInt();
 
                             final Color cellColor;
