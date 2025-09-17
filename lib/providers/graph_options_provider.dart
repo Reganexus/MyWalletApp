@@ -4,7 +4,6 @@ class GraphOptionsProvider extends ChangeNotifier {
   final Map<String, bool> _graphVisibility = {
     'weeklySpending': true,
     'topExpense': true,
-    'balanceByCurrency': true,
     'incomeExpense': true,
     'accountDistribution': true,
   };
