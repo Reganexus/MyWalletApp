@@ -11,7 +11,12 @@ class OverlayMessage {
 
     final overlayEntry = OverlayEntry(
       builder:
-          (context) => _FullScreenOverlay(message: message, isError: isError),
+          (context) => Positioned(
+            bottom: 120,
+            left: 24,
+            right: 24,
+            child: _ToastOverlay(message: message, isError: isError),
+          ),
     );
 
     overlay.insert(overlayEntry);
@@ -22,21 +27,20 @@ class OverlayMessage {
   }
 }
 
-class _FullScreenOverlay extends StatefulWidget {
+class _ToastOverlay extends StatefulWidget {
   final String message;
   final bool isError;
 
-  const _FullScreenOverlay({required this.message, this.isError = false});
+  const _ToastOverlay({required this.message, this.isError = false});
 
   @override
-  State<_FullScreenOverlay> createState() => _FullScreenOverlayState();
+  State<_ToastOverlay> createState() => _ToastOverlayState();
 }
 
-class _FullScreenOverlayState extends State<_FullScreenOverlay>
+class _ToastOverlayState extends State<_ToastOverlay>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -47,15 +51,10 @@ class _FullScreenOverlayState extends State<_FullScreenOverlay>
       duration: const Duration(milliseconds: 300),
     );
 
-    _opacityAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _opacityAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
 
     _controller.forward();
   }
@@ -71,32 +70,31 @@ class _FullScreenOverlayState extends State<_FullScreenOverlay>
     return FadeTransition(
       opacity: _opacityAnimation,
       child: Material(
-        color: Colors.black.withValues(alpha: 0.9),
-        child: Center(
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  widget.isError
-                      ? Icons.error_outline
-                      : Icons.check_circle_outline,
-                  color: widget.isError ? Colors.redAccent : Colors.green,
-                  size: 150,
-                ),
-                const SizedBox(height: 16),
-                Text(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: widget.isError ? Colors.redAccent : Colors.green,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.isError
+                    ? Icons.error_outline
+                    : Icons.check_circle_outline,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
                   widget.message,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
