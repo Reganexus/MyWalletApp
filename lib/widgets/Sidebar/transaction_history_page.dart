@@ -101,59 +101,67 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                   ],
                 ),
                 SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: AccountFilterDropdown(
-                        accounts: accounts,
-                        selectedAccount: _selectedAccount,
-                        onChanged:
-                            (account) =>
-                                setState(() => _selectedAccount = account),
+                if (accounts.isNotEmpty)
+                  Row(
+                    children: [
+                      // Account filter
+                      Flexible(
+                        flex: 1,
+                        child: AccountFilterDropdown(
+                          accounts: accounts,
+                          selectedAccount: _selectedAccount,
+                          onChanged:
+                              (account) =>
+                                  setState(() => _selectedAccount = account),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TimeFilterDropdown(
-                        selectedFilter: _selectedFilter,
-                        onChanged: (filter) async {
-                          if (filter == FilterOption.custom) {
-                            final picked = await showDateRangePicker(
-                              context: context,
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now(),
-                              initialDateRange:
-                                  _customRange ??
-                                  DateTimeRange(
-                                    start: DateTime.now().subtract(
-                                      const Duration(days: 7),
+                      const SizedBox(width: 8),
+
+                      // Time filter
+                      Flexible(
+                        flex: 1,
+                        child: TimeFilterDropdown(
+                          selectedFilter: _selectedFilter,
+                          onChanged: (filter) async {
+                            if (filter == FilterOption.custom) {
+                              final picked = await showDateRangePicker(
+                                context: context,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime.now(),
+                                initialDateRange:
+                                    _customRange ??
+                                    DateTimeRange(
+                                      start: DateTime.now().subtract(
+                                        const Duration(days: 7),
+                                      ),
+                                      end: DateTime.now(),
                                     ),
-                                    end: DateTime.now(),
-                                  ),
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                _customRange = picked;
-                                _selectedFilter = FilterOption.custom;
-                              });
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _customRange = picked;
+                                  _selectedFilter = FilterOption.custom;
+                                });
+                              }
+                            } else {
+                              setState(() => _selectedFilter = filter);
                             }
-                          } else {
-                            setState(() => _selectedFilter = filter);
-                          }
-                        },
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TypeFilterDropdown(
-                        selectedType: _selectedType,
-                        onChanged:
-                            (type) => setState(() => _selectedType = type),
+                      const SizedBox(width: 8),
+
+                      // Type filter
+                      Flexible(
+                        flex: 1,
+                        child: TypeFilterDropdown(
+                          selectedType: _selectedType,
+                          onChanged:
+                              (type) => setState(() => _selectedType = type),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),

@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
             '/edit-profile': (context) => const EditProfileScreen(),
             '/delete': (context) => const DeleteAllData(),
             '/backup': (context) => const BackupScreen(),
-            "/graph-options": (_) => const GraphOptionsScreen(),
+            '/graph-options': (_) => const GraphOptionsScreen(),
           },
         );
       },

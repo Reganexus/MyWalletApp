@@ -184,31 +184,38 @@ class _PinScreenState extends State<PinScreen> {
   }
 
   Widget _buildKeypadButton(String text, {IconData? icon}) {
-    return GestureDetector(
-      onTap: () => _onKeyPressed(text),
-      child: Container(
-        alignment: Alignment.center,
-        margin: const EdgeInsets.all(8),
-        width: 70,
-        height: 70,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color:
-              icon == null
-                  ? Theme.of(context).colorScheme.surface.withAlpha(40)
-                  : Colors.transparent,
-        ),
-        child:
-            icon != null
-                ? Icon(icon, size: 32, color: Colors.white)
-                : Text(
-                  text,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        splashColor: Colors.white.withValues(alpha: 0.2),
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        onTap: () => _onKeyPressed(text),
+        child: Container(
+          alignment: Alignment.center,
+          margin: const EdgeInsets.all(8),
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color:
+                icon == null
+                    ? Theme.of(context).colorScheme.surface.withAlpha(40)
+                    : Colors.transparent,
+          ),
+          child:
+              icon != null
+                  ? Icon(icon, size: 32, color: Colors.white)
+                  : Text(
+                    text,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
+        ),
       ),
     );
   }
@@ -234,7 +241,6 @@ class _PinScreenState extends State<PinScreen> {
       }
     }
 
-    // CORRECTED: Simplified logic for the leading icon
     final bool showBackButton = widget.mode == PinMode.change;
 
     return Scaffold(
@@ -282,7 +288,7 @@ class _PinScreenState extends State<PinScreen> {
                 ),
                 const SizedBox(height: 24),
                 _buildPinDots(),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 // Keypad
                 Padding(
@@ -303,6 +309,7 @@ class _PinScreenState extends State<PinScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 48),
               ],
             ),
           ),

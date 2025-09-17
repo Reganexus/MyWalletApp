@@ -25,23 +25,43 @@ Future<void> showDraggableModal({
               ),
               boxShadow: [
                 BoxShadow(
-                  color: theme.shadowColor.withValues(alpha: 0.2),
+                  color: theme.shadowColor.withAlpha(50),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
               ],
             ),
-            child: SingleChildScrollView(
-              controller: scrollController,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                  left: 8,
-                  right: 8,
-                  top: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // --- Drag handle bar ---
+                Padding(
+                  padding: const EdgeInsets.only(top: 24, bottom: 12),
+                  child: Container(
+                    width: 60,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-                child: child,
-              ),
+
+                // --- Scrollable content ---
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                        left: 8,
+                        right: 8,
+                      ),
+                      child: child,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },

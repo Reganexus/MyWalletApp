@@ -180,18 +180,6 @@ class _IncomeExpenseTrendGraphState extends State<IncomeExpenseTrendGraph> {
                     lineBarsData: [
                       LineChartBarData(
                         preventCurveOverShooting: true,
-                        spots: _incomeSpots,
-                        isCurved: true,
-                        color: Colors.green,
-                        barWidth: 2,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: Colors.green.withAlpha(25),
-                        ),
-                      ),
-                      LineChartBarData(
-                        preventCurveOverShooting: true,
                         spots: _expenseSpots,
                         isCurved: true,
                         color: Colors.red,
@@ -199,7 +187,19 @@ class _IncomeExpenseTrendGraphState extends State<IncomeExpenseTrendGraph> {
                         dotData: FlDotData(show: false),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: Colors.red.withAlpha(25),
+                          color: Colors.red.withAlpha(100),
+                        ),
+                      ),
+                      LineChartBarData(
+                        preventCurveOverShooting: true,
+                        spots: _incomeSpots,
+                        isCurved: true,
+                        color: Colors.green,
+                        barWidth: 2,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.green.withAlpha(100),
                         ),
                       ),
                     ],
