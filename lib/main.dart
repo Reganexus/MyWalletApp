@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mywallet/providers/multiprovider.dart';
 import 'package:mywallet/providers/theme_provider.dart';
 import 'package:mywallet/screens/Getting_Started/change_pin_starter.dart';
@@ -20,7 +19,6 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
 
   final dbService = DBService();
   await dbService.database;
