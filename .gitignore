@@ -44,6 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Environment variables file
 .env
 android/key.properties
 android/app/my-release-key.jks
